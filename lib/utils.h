@@ -1,0 +1,80 @@
+#ifndef UTILS_H
+#define UTILS_H
+
+#include <algorithm>
+#include <chrono>
+#include <fstream>
+#include <functional>
+#include <iostream>
+#include <map>
+#include <random>
+#include <stdexcept>
+#include <string>
+#include <vector>
+#include "math.h"
+
+
+using vecs = std::vector<std::string>;
+using vecf = std::vector<float>;
+using veci = std::vector<int>;
+using vecd = std::vector<double>;
+using vec2d = std::vector<vecd>;
+using vec3d = std::vector<vec2d>;
+using dictd = std::map<std::string, double>;
+
+
+// BASIC GLOBAL CONSTANTS
+const double PI = 3.1415926535897932384626433;
+/* Air density, kg/m^3 */
+const double rho = 1.225; 
+/* Gravity acceleration, m/s^2 */
+const double g = 9.806;
+
+
+vecd boltzman_weights(vecd params);
+
+double plaw_dacay(double t, double t_burn, double expn, double a0, double ac);
+
+dictd parse_param_file(std::string file_path);
+
+vec2d read_best_pol(std::string file_path);
+
+
+/* Class for measuring the time between the reset and en enlapsed call */
+class Timer {
+	private:
+		using clock_t = std::chrono::high_resolution_clock;
+		using second_t = std::chrono::duration<double, std::ratio<1> >;
+		std::chrono::time_point<clock_t> m_beg;
+	public:
+		Timer() : m_beg(clock_t::now()) { };
+		/* Set the onset for the time measure */
+		void reset() { m_beg = clock_t::now(); }
+		/* Get the time in seconds enlapsed from reset */
+		double elapsed() const { return std::chrono::duration_cast<second_t>(clock_t::now() - m_beg).count(); }
+};
+
+
+class Perc {
+	private:
+		int m_perc_step;
+		int m_max_steps;
+		double m_last_perc;
+	public:
+		Perc(int perc_step, int max_steps) : m_max_steps{max_steps}, m_last_perc{0.0} {
+			if (perc_step<1 || perc_step>100) {
+				std::cout << "Invalid percentage step. Set by default to 10%\n";
+				m_perc_step = 10;
+			}
+			else m_perc_step = perc_step;
+		};
+		void step(int curr_step) {
+			double perc = (double)curr_step/(double)m_max_steps*100;
+			if (perc >= m_last_perc){
+				std::cout << round(perc) << "%\n";
+				m_last_perc = round(perc) + m_perc_step;
+			}
+		}
+};
+
+#endif
