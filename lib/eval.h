@@ -33,6 +33,8 @@ class Eval {
         vec2d m_state_traj;
         /* Trajectory of the returns */
         vecd m_return_traj;
+        /* Length of the episodes */
+        veci m_ep_len_traj;
         // /* Observables to compute */
         // vec_obs m_obs;
         // /* Trajectory of all the observables */

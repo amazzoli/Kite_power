@@ -1,0 +1,14 @@
+gamma	1.0
+n_steps	20000000
+traj_points	1000
+use_init_pol_from_file	1
+use_init_val_from_file	1
+init_values	500.0
+a0	0.005
+ac	40000
+a_expn	0.7
+a_burn	20000000
+b0	0.0001
+bc	40000
+b_expn	0.7
+b_burn	20000000

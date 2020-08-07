@@ -2,6 +2,7 @@
 #define KITE_H
 
 #include "../env.h"
+#include "../wind.h"
 
 
 
@@ -53,7 +54,7 @@ class Kite : public Environment {
 
 	public:
 
-		Kite(dictd params, std::mt19937& generator);
+		Kite(const dictd& params, std::mt19937& generator);
 
 		/* Abstract. Get the current aggregate state */
 		virtual int aggr_state() const = 0;
@@ -86,31 +87,42 @@ class Kite : public Environment {
 
 class Kite2d : public Kite {
 	
-	private:
+	protected:
 
+		/* Generic wind type */
+		Wind2d* wind;
+
+		// INITIAL CONDITIONS
 		/* Initial angle of the block-kite with the ground */
 		double init_theta;
 		/* Initial angular velocity of the block-kite */
 		double init_dtheta;
 		/* Initial attack angle index. If > n_alphas they are generated at random */
 		int init_alpha_ind;
+
+		// DYNAMICAL VARIABLES
 		/* Current value of the attack angle index */
-		int curr_alpha_ind;
+		int alpha_ind;
 		/* Vetor for computing the lift */
 		int t2;
-		/* Constant wind speed */
-		int v_wind[2];
+		double r_diff[2];
+		double theta;
+		double beta;
+		double f_aer[2];
+		double tension[2];
+		double friction;
 
-		// Aux functions for integrate the trajectory
+		// AUXILIARY FUNCTION FOR THE DYNAMICS
 		int update_aggr_state(int action);
-		void compute_F_aer(double theta, double* F_aer);
-		void compute_tension_still(double theta, double r_diff[], double f_aer[], double* tension, double& friction);
-		void compute_tension_move(double theta, double r_diff[], double f_aer[], double* tension, double& friction);
-		void update_state(double r_diff[], double f_aer[], double tension[], double friction);
+		void compute_F_aer();
+		void compute_tension_still();
+		void compute_tension_move();
+		void update_state();
 
 	public:
 
-		Kite2d(dictd params, std::mt19937& generator);
+		Kite2d(const dictd& params, Wind2d* wind, std::mt19937& generator);
+		~Kite2d() { delete wind; }
 		virtual int aggr_state() const;
         virtual void reset_kite();
         virtual void impose_action(int action);
@@ -120,7 +132,25 @@ class Kite2d : public Kite {
 };
 
 
-Environment* get_env(std::string env_name, dictd params, std::mt19937& generator);
+/* Two-dim kite having in addition the kite-wind relative velocity angle as state */
+class Kite2d_vrel : public Kite2d {
+	private:
+		/* Discretized relative velocity angles. Note, those are the boundaries of the bins.
+		   The actual states refer to the middle point between each bin, and are one less that the array size */
+		double beta_bins[25] = {-PI, -3.0, -2.9, -2.7, -2.4, -2.1, -1.8, -1.5, -1.2, -0.9, -0.6, -0.3, \
+                                0., 0.3, 0.6, 0.9, 1.2, 1.5, 1.8, 2.1, 2.4, 2.7, 2.9, 3.0, PI};
+
+	public:
+
+		Kite2d_vrel(const dictd& params, Wind2d* wind, std::mt19937& generator);
+		virtual int aggr_state() const;
+		/* Number of relative velocity angles */ 
+        int n_betas() const { return sizeof(beta_bins)/sizeof(beta_bins[0])-1; }
+};
+
+
+
+Environment* get_env(std::string env_name, const dictd& params, std::mt19937& generator);
 
 
 #endif

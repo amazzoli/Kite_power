@@ -19,8 +19,10 @@ int main(int argc, char** argv) {
     std::string alg_name(argv[2]);
     std::string data_dir = "../data/";
     dictd params = parse_param_file(data_dir + env_name + "/" + alg_name + "/param_env.txt"); // Def in utils
+    dictd ev_params = parse_param_file(data_dir + env_name + "/" + alg_name + "/param_ev.txt");
 
     // Constructing the environment.
+    params.at("ep_length") = ev_params.at("ep_length");
     Environment* env = get_env(env_name, params, generator); // Def in kite.h
     std::cout << "Environment successfully built\n";
 
@@ -29,7 +31,6 @@ int main(int argc, char** argv) {
     std::cout << "Policy imported\n";
 
     // Running the evaluation class
-    dictd ev_params = parse_param_file(data_dir + env_name + "/" + alg_name + "/param_ev.txt");
     Eval eval(env, policy, ev_params, generator);
     int n_steps = int(ev_params["ev_time"]/params["decision_time"]);
     Timer timer;
@@ -38,6 +39,8 @@ int main(int argc, char** argv) {
     std::cout << "Evaluation completed in " << timer.elapsed() << " seconds\n";
 
     eval.print_traj(data_dir + env_name + "/" + alg_name + "/");
+
+    delete env;
 
     return 0;
 }

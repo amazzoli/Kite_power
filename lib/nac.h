@@ -36,47 +36,66 @@ class AC {
         /* Random number generator */ 
         std::mt19937 m_generator;
 
-        const double p_par_bounds[2] = {-100, 100};
+        // AUX FUNCTIONS
+        /* Build constant value parameters */
+        vecd const_values(double val);
+        /* Build a flat policy */
+        vec2d flat_policy();
+        /* Initialization of the variables before running */ 
+        void init(vecd init_values, vec2d init_policies);
+        /* Reset the variables at episode end */
+        void reset_env();
 
     protected:
 
         /* MDP to solve */
-        Environment* m_env;   
+        Environment* env;   
+
+        // "CURRENT VARIABLES" CHANGED AT EACH LEARNING STEP
         /* Aggregate state at the current time step of the learning */
-        int m_curr_aggr_state;
+        int curr_aggr_state;
         /* Chosen action at the current time step of the learning */
-        int m_curr_action;
+        int curr_action;
         /* Policy at the current time step of the learning */
-        vecd m_curr_policy;
+        vecd curr_policy;
         /* Critic learning rate at the current time step of the learning */
-        double m_curr_crit_lr;
+        double curr_crit_lr;
         /* Actor learning rate at the current time step of the learning */
-        double m_curr_act_lr;
+        double curr_act_lr;
+        /* Value/critic parameters */
+        vecd curr_v_pars;
+        /* Policy/actor parameters */
+        vec2d curr_p_pars;
+        /* Return of the episode */
+        double curr_return;
+        /* Gamma power number of steps from episode onset */
+        double curr_gamma_fact;
+
+        // VIRTUAL FUNCTIONS
         /* Algorithm specific initialization */
         virtual void init_pars() {};
         /* Actor delta update */
-        virtual void  delta_act_updt(vec2d& policy_pars, double td_error);
+        virtual void  delta_act_updt(double td_error);
 
     public:
 
         /* Construct the algorithm given the parameters dictionary */
-        AC(Environment* env, dictd& params, std::mt19937& generator);
+        AC(Environment* env, const dictd& params, std::mt19937& generator);
 
-        /* Run the algorithm for n_steps, given the critic and actor learning rates, which
-           are functions of the time step. */
-        void run(int n_steps, int n_point_traj=2000, double init_values=0);
+        /* Run the algorithm for n_steps, given the initial condition of the values and the policies */
+        void run(int n_steps, vecd init_values, vec2d init_policies, int n_point_traj=2000);
+        /* Run the algorithm for n_steps, given the initial condition of the values and flat policies */
+        void run(int n_steps, vecd init_values, int n_point_traj=2000);
+        /* Run the algorithm for n_steps, given the initial condition of the policies and constant values */
+        void run(int n_steps, double init_values, vec2d init_policies, int n_point_traj=2000);
+        /* Run the algorithm for n_steps, given constant values and flat policies */
+        void run(int n_steps, double init_values, int n_point_traj=2000);
 
         /* Print the policy and the value trajectories */
         void print_traj(std::string out_dir) const;
 
-        /* Print the best policy found */
-        void print_best_pol(std::string out_dir) const;
-
-        /* Get the trajectory of the policy */ 
-        const vec3d& policy_par_traj() const { return m_policy_par_traj; }
-
-        /* Get the trajectory of the values */ 
-        const vec2d& value_traj() const { return m_value_traj; }
+        /* Print the best policy and the best value found */
+        void print_best_pol_val(std::string out_dir) const;
 };
 
 

@@ -1,20 +1,16 @@
 #include "kite.h"
 
 
-Kite::Kite(dictd params, std::mt19937& generator) : Environment{params, generator} {
-
-	// If parameters are not present, they are init to zero
-	if (params["ep_length"] == 0 || params["decision_time"] == 0 || params["int_steps"] == 0)
-		throw std::runtime_error ( "Environment parameters error\n" );
+Kite::Kite(const dictd& params, std::mt19937& generator) : Environment{params, generator} {
 
 	// Check temporal inconsistencies
-	if (params["ep_length"] < params["decision_time"] || params["ep_length"] < params["int_steps"] \
-		|| params["decision_time"] < params["int_steps"])
+	if (params.at("ep_length") < params.at("decision_time") || params.at("ep_length") < params.at("int_steps")
+		|| params.at("decision_time") < params.at("int_steps"))
 		throw std::runtime_error ( "Temporal scales are not consistent\n" );
 
-	ep_length = int(params["ep_length"]/params["int_steps"]);
-	steps_btw_train = int(params["decision_time"]/params["int_steps"]);
-	h = params["int_steps"];
+	ep_length = int(params.at("ep_length")/params.at("int_steps"));
+	steps_btw_train = int(params.at("decision_time")/params.at("int_steps"));
+	h = params.at("int_steps");
 }
 
 
@@ -40,15 +36,16 @@ env_info Kite::step(int action) {
 }
 
 
-Environment* get_env(std::string env_name, dictd params, std::mt19937& generator) {
+Environment* get_env(std::string env_name, const dictd& params, std::mt19937& generator) {
     if (env_name == "kite2d"){
-        Environment* env = new Kite2d(params, generator);
+		Wind2d* wind = get_wind2d(params);
+        Environment* env = new Kite2d(params, wind, generator);
         return env;
     }
-        
-    else{
-        throw std::invalid_argument( "Invalid environment name" );
-        Environment* env = new Kite2d(params, generator);
+    if (env_name == "kite2d_vrel"){
+		Wind2d* wind = get_wind2d(params);
+        Environment* env = new Kite2d_vrel(params, wind, generator);
         return env;
     }
+    else throw std::invalid_argument( "Invalid environment name" );
 }

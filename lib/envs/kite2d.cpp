@@ -1,11 +1,12 @@
 #include "kite.h"
 
 
-// TODO rimuovere posizione, velocità e acc del blocco lungo y
+// KITE 2D HAVING THE ATTACK ANGLE AS AGGREGATE STATE
 
 
 /* Constructor */
-Kite2d::Kite2d(dictd params, std::mt19937& generator) : Kite{params, generator} {
+Kite2d::Kite2d(const dictd& params, Wind2d* wind, std::mt19937& generator) : 
+Kite{params, generator}, wind{wind} {
 
 	// BUILDING THE STATE AND ACTION INFORMATION
 	// Description of each position of the full state vector
@@ -36,17 +37,15 @@ Kite2d::Kite2d(dictd params, std::mt19937& generator) : Kite{params, generator} 
 	m_n_actions = m_act_descr.size();
 
 	// SETTING SPECIFIC PARAMETERS
-	init_theta = params["init_theta"];
-	init_dtheta = params["init_dtheta"];
-    init_alpha_ind = params["init_alpha"];
-	v_wind[0] = params["v_wind_x"];
-	v_wind[1] = params["v_wind_y"];
+	init_theta = params.at("init_theta");
+	init_dtheta = params.at("init_dtheta");
+    init_alpha_ind = params.at("init_alpha");
 }
 
 
 /* Aggregate state: it is defined by the current attack angle */
 int Kite2d::aggr_state() const {
-	return curr_alpha_ind;
+	return alpha_ind;
 }
 
 
@@ -55,9 +54,9 @@ void Kite2d::reset_kite(){
 
     // Initial attack angle
     if (init_alpha_ind >= n_alphas())
-        curr_alpha_ind = std::uniform_int_distribution<int>(0, n_alphas()-1)(m_generator);
+        alpha_ind = std::uniform_int_distribution<int>(0, n_alphas()-1)(m_generator);
     else 
-        curr_alpha_ind = init_alpha_ind;
+        alpha_ind = init_alpha_ind;
 
 	// Block position, velocity, acceleration
     m_state[6] = 0;
@@ -77,6 +76,7 @@ void Kite2d::reset_kite(){
     m_state[5] = -R*init_dtheta*init_dtheta*sin(init_theta);
 
     double r_diff[2] = {m_state[0] - m_state[6], m_state[1] - m_state[7]};
+    double* v_wind = (*wind).velocity(m_state[0], m_state[1]);
     double va_x = m_state[2] - v_wind[0];
     double va_y = m_state[3] - v_wind[1];
     double beta = atan2(va_y, va_x);
@@ -87,9 +87,9 @@ void Kite2d::reset_kite(){
 
 
 void Kite2d::impose_action(int a){
-    if (a == 0) curr_alpha_ind = std::max(curr_alpha_ind - 1, 0);
-    else if (a == 1) curr_alpha_ind = curr_alpha_ind;
-    else if (a == 2) curr_alpha_ind = std::min(curr_alpha_ind + 1, n_alphas()-1);
+    if (a == 0) alpha_ind = std::max(alpha_ind - 1, 0);
+    else if (a == 1) alpha_ind = alpha_ind;
+    else if (a == 2) alpha_ind = std::min(alpha_ind + 1, n_alphas()-1);
     else throw std::runtime_error ( "Invalid action " + std::to_string(a) + "\n" );
 }
 
@@ -97,22 +97,21 @@ void Kite2d::impose_action(int a){
 bool Kite2d::integrate_trajectory() {
 
     // Angle with the ground
-    double r_diff[2] = {m_state[0] - m_state[6], m_state[1] - m_state[7]};
-    double theta = atan2(r_diff[1], r_diff[0]);
+    r_diff[0] = m_state[0] - m_state[6];
+    r_diff[1] = m_state[1] - m_state[7];
+    theta = atan2(r_diff[1], r_diff[0]);
 
     // Aeroynamical forces
-    double f_aer[2];
-    compute_F_aer(theta, f_aer);
+    compute_F_aer();
 
     // Tension and friction
-    double tension[2], friction;
     if ( fabs(m_state[8]) < v_threshold ) // BLOCK NOT MOVING
-        compute_tension_still(theta, r_diff, f_aer, tension, friction);
+        compute_tension_still();
     else // BLOCK MOVING
-        compute_tension_move(theta, r_diff, f_aer, tension, friction);
+        compute_tension_move();
 
     // Update positions, velocities and accelerations
-    update_state(r_diff, f_aer, tension, friction);
+    update_state();
 
     // Check if a terminal state is reached. Kite fallen
     if (m_state[1] <= 0) return true;
@@ -121,21 +120,22 @@ bool Kite2d::integrate_trajectory() {
 
 
 /* Compute the aerodynamical forces */
-void Kite2d::compute_F_aer(double theta, double* f_aer){
+void Kite2d::compute_F_aer(){
     // Apparent velocity
+    double* v_wind = (*wind).velocity(m_state[0], m_state[1]);
     double va_x = m_state[2] - v_wind[0];
     double va_y = m_state[3] - v_wind[1];
     double va_mod = sqrt(va_x*va_x + va_y*va_y);
+    beta = atan2(va_y, va_x);
 
     // Drag
     double coef = 0.5 * rho * a_kite * va_mod;
-    double aux_d = coef * CD_alpha[curr_alpha_ind];
+    double aux_d = coef * CD_alpha[alpha_ind];
     double D_x = -aux_d * va_x;
     double D_y = -aux_d * va_y;   
 
     // Lift
-    double beta = atan2(va_y, va_x);
-    double aux_l = coef * CL_alpha[curr_alpha_ind];
+    double aux_l = coef * CL_alpha[alpha_ind];
     double L_x = aux_l * va_y * t2;
     double L_y = -aux_l * va_x * t2;
     
@@ -145,7 +145,7 @@ void Kite2d::compute_F_aer(double theta, double* f_aer){
 
 
 /* Compute the tension and the friction of a still block */
-void Kite2d::compute_tension_still(double theta, double r_diff[], double f_aer[], double* tension, double& friction){
+void Kite2d::compute_tension_still(){
 
     double v_diff[2] = {m_state[2] - m_state[8], m_state[3] - m_state[9]};
     double aux_A = (f_aer[0]*r_diff[0] + f_aer[1]*r_diff[1])/m_kite + (v_diff[0]*v_diff[0] + v_diff[1]*v_diff[1]);
@@ -177,7 +177,7 @@ void Kite2d::compute_tension_still(double theta, double r_diff[], double f_aer[]
 
 
 /* Compute the tension and the friction of a moving block */
-void Kite2d::compute_tension_move(double theta, double r_diff[], double f_aer[], double* tension, double& friction){
+void Kite2d::compute_tension_move(){
 
     double v_diff[2] = {m_state[2] - m_state[8], m_state[3] - m_state[9]};
     double aux_A = (f_aer[0]*r_diff[0] + f_aer[1]*r_diff[1])/m_kite + (v_diff[0]*v_diff[0] + v_diff[1]*v_diff[1]);
@@ -201,7 +201,7 @@ void Kite2d::compute_tension_move(double theta, double r_diff[], double f_aer[],
 }
 
 
-void Kite2d::update_state(double r_diff[], double f_aer[], double tension[], double friction){
+void Kite2d::update_state(){
     // Block acc
     m_state[10] = ( tension[0] + friction ) / m_block;
     m_state[11] = 0;
@@ -239,4 +239,31 @@ double Kite2d::terminal_reward(double gamma){
         return -fall_penalty;
     else
         return 0;
+}
+
+
+// KITE 2D HAVING ALSO THE RELATIVE VELOCITY ANGLE AS STATE
+
+
+Kite2d_vrel::Kite2d_vrel(const dictd& params, Wind2d* wind, std::mt19937& generator) :
+Kite2d{params, wind, generator} {
+    // Here the aggregate state changes
+	m_aggr_state_descr = vecs(0);
+	for (int a=0; a<n_alphas(); a++) 
+        for (int b=0; b<n_betas(); b++) {
+            double ref_beta = (beta_bins[b+1] + beta_bins[b]) / 2.0;
+            m_aggr_state_descr.push_back("attack_ang_"+std::to_string(alphas[a])+",vrel_angle_"+std::to_string(ref_beta));
+        }
+	m_n_aggr_state = m_aggr_state_descr.size();
+}
+
+
+int Kite2d_vrel::aggr_state() const {
+    int b;
+    for (b=0; b<n_betas(); b++){
+        if (beta >= beta_bins[b] && beta < beta_bins[b+1]){
+            break;
+        }
+    }
+    return b + n_betas()*alpha_ind;
 }

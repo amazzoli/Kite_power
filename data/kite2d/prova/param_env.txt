@@ -3,6 +3,7 @@ ep_length	10
 decision_time	0.01
 init_theta	0.7853981633974483
 init_dtheta	0
-init_alpha	10
+init_alpha	15
+wind_type	0
 v_wind_x	15
 v_wind_y	0

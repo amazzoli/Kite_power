@@ -31,11 +31,15 @@ const double rho = 1.225;
 const double g = 9.806;
 
 
-vecd boltzman_weights(vecd params);
+void par2pol_boltzmann(const vecd& params, vecd& policy);
+
+void pol2par_boltzmann(const vecd& policy, vecd& params);
 
 double plaw_dacay(double t, double t_burn, double expn, double a0, double ac);
 
 dictd parse_param_file(std::string file_path);
+
+vecd read_best_val(std::string file_path);
 
 vec2d read_best_pol(std::string file_path);
 
