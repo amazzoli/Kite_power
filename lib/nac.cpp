@@ -2,7 +2,7 @@
 
 
 AC::AC(Environment* env, const dictd& params, std::mt19937& generator) : 
-env{env}, m_generator{generator} {
+Algorithm(env, generator) {
     m_gamma = params.at("gamma");
     // Learning rate scheduling
     m_lr_crit = d_i_fnc{  // Critic
@@ -15,6 +15,31 @@ env{env}, m_generator{generator} {
             return plaw_dacay(step, params.at("b_burn"), params.at("b_expn"), params.at("b0"), params.at("bc"));
         }
     };
+}
+
+
+void AC::run(const param& params){
+
+    // Without priors -> constant init values and flat policy
+    if (params.s.find("init_val_path") == params.s.end() && params.s.find("init_pol_path") == params.s.end()){
+        run(params.d.at("n_steps"), params.d.at("init_values"), params.d.at("traj_points"));
+
+    // With value prior
+    } else if (params.s.find("init_val_path") != params.s.end() && params.s.find("init_pol_path") == params.s.end()){
+        vecd val = read_best_val( params.s.at("init_val_path") );
+        run(params.d.at("n_steps"), val, params.d.at("traj_points"));
+
+    // With policy prior
+    } else if (params.s.find("init_val_path") == params.s.end() && params.s.find("init_pol_path") != params.s.end()){
+        vec2d pol = read_best_pol( params.s.at("init_pol_path") );
+        run(params.d.at("n_steps"), params.d.at("init_values"), pol, params.d.at("traj_points"));
+
+    // With policy and value priors
+    } else {
+        vecd val = read_best_val( params.s.at("init_val_path") );
+        vec2d pol = read_best_pol( params.s.at("init_pol_path") );
+        run(params.d.at("n_steps"), val, pol, params.d.at("traj_points"));
+    }
 }
 
 
@@ -49,7 +74,7 @@ void AC::run(int n_steps, vecd init_values, vec2d init_policies, int n_point_tra
 
         // Extracting the action from the policy
         std::discrete_distribution<int> dist (curr_policy.begin(), curr_policy.end());
-        curr_action = dist(m_generator);
+        curr_action = dist(generator);
 
         // Envitonmental step
         env_info info = (*env).step(curr_action);
@@ -136,13 +161,13 @@ vec2d AC::flat_policy(){
 }
 
 
-void AC::print_traj(std::string out_dir) const {
+void AC::print_output(std::string out_dir) const {
+
+    // PRINTING THE TRAJECTORIES
     std::ofstream out_p, out_p1, out_v, out_r;
     out_p.open(out_dir + "policy_traj.txt");
-    //out_p1.open(out_dir + "policyp_traj.txt");
     out_v.open(out_dir + "value_traj.txt");
     out_r.open(out_dir + "return_traj.txt");
-
     // Headers
     for (int k=0; k<m_value_traj[0].size(); k++){
         out_v << (*env).aggr_state_descr()[k] << "\t";
@@ -155,7 +180,6 @@ void AC::print_traj(std::string out_dir) const {
         if (a < m_policy_par_traj[0][0].size()-1) out_p << ",";
     }
     out_p << "\n";
-
     // Body
     for (int t=0; t<m_policy_par_traj.size(); t++){
         for (int k=0; k<m_policy_par_traj[0].size(); k++){
@@ -164,25 +188,19 @@ void AC::print_traj(std::string out_dir) const {
             par2pol_boltzmann(m_policy_par_traj[t][k], policy);
             for (int a=0; a<policy.size(); a++){
                 out_p << policy[a];
-                //out_p1 << m_policy_par_traj[t][k][a];
-                if (a < policy.size()-1){
-                    out_p << ",";
-                    //out_p1 << ",";
-                }
+                if (a < policy.size()-1) out_p << ",";
             }
             out_p << "\t";
-            //out_p1 << "\t";
         }
         out_v << "\n";
         out_p << "\n";
-        //out_p1 << "\n";
     }
     for (int t=0; t<m_return_traj.size(); t++) out_r << m_return_traj[t] << "\n";
-}
+    out_p.close();
+    out_v.close();
+    out_r.close();
 
-
-void AC::print_best_pol_val(std::string out_dir) const {
-    std::ofstream out_p, out_v;
+    // PRINTING THE BEST VALUES AND THE BEST POLICIES
     out_p.open(out_dir + "best_policy.txt");
     out_v.open(out_dir + "best_value.txt");
     int fin_time = m_policy_par_traj.size()-1;

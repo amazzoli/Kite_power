@@ -38,8 +38,16 @@ class Wind2d_stream : public Wind2d {
 };   
 
 
-Wind2d* get_wind2d(const dictd& params);
-//Wind3d* get_wind3d(const dictd& params);
+class Wind3d_const : public Wind3d {
+    public:
+        Wind3d_const(double vel[3]) { m_vel[0] = vel[0]; m_vel[1] = vel[1]; ; m_vel[2] = vel[2];  };
+        virtual double* velocity(double x, double y, double z) { return m_vel; }
+};   
+
+
+Wind2d* get_wind2d(const param& params);
+
+Wind3d* get_wind3d(const param& params);
 
 
 #endif

@@ -6,7 +6,8 @@
 // The first refers to the environment that is trained, the second to the algorithm that trains.
 
 
-void run(AC& alg, const dictd& params, std::string dir);
+Environment* get_env(std::string env_name, const param& params, std::mt19937& generator);
+Algorithm* get_alg(Environment* env, const param& params, std::mt19937& generator);
 
 
 int main(int argc, char** argv) {
@@ -19,52 +20,69 @@ int main(int argc, char** argv) {
     std::mt19937 generator(seed);
 
     // Importing the parameters file
-    std::string env_name(argv[1]);
-    std::string alg_name(argv[2]);
-    std::string data_dir = "../data/";
-    dictd params = parse_param_file(data_dir+env_name+"/"+alg_name+"/param_env.txt"); // Def in utils
+    std::string env_name(argv[1]), alg_name(argv[2]), data_dir = "../data/";
+    param params = parse_param_file(data_dir+env_name+"/"+alg_name+"/param_env.txt"); // Def in utils
 
     // Constructing the environment.
     Environment* env = get_env(env_name, params, generator); // Def in kite.h
     std::cout << "Environment successfully built\n";
 
-    // Constructing the algorithm
-    dictd alg_params = parse_param_file(data_dir + env_name + "/" + alg_name + "/param_alg.txt"); 
-    AC alg(env, alg_params, generator);
+    // // Constructing the algorithm
+    param alg_params = parse_param_file(data_dir + env_name + "/" + alg_name + "/param_alg.txt"); 
+    Algorithm* alg = get_alg(env, alg_params, generator);
     std::cout << "Algorithm successfully initialized\n";
 
     // Running the algorithm
     Timer timer;
     std::cout << "Algorithm started\n";
-    run(alg, alg_params, data_dir + env_name + "/" + alg_name);
+    (*alg).run(alg_params);
     std::cout << "Algorithm completed in " << timer.elapsed() << " seconds\n";
 
     // Printing the trajectories
-    alg.print_traj(data_dir + env_name + "/" + alg_name + "/");
-    alg.print_best_pol_val(data_dir + env_name + "/" + alg_name + "/");
+    (*alg).print_output(data_dir + env_name + "/" + alg_name + "/");
     std::cout << "Trajectories successfully printed\n";
 
     delete env;
+    delete alg;
+
     return 0;
 }
 
 
-void run(AC& alg, const dictd& params, std::string dir){
-    if (params.at("use_init_val_from_file") <= 0 && params.at("use_init_pol_from_file") <= 0){
-        // Without priors -> constant init values and flat policy
-        alg.run(params.at("n_steps"), params.at("init_values"), params.at("traj_points"));
-    } else if (params.at("use_init_val_from_file") > 0 && params.at("use_init_pol_from_file") <= 0){
-        // With value prior
-        vecd val = read_best_val(dir + "/best_value.txt");
-        alg.run(params.at("n_steps"), val, params.at("traj_points"));
-    } else if (params.at("use_init_val_from_file") <= 0 && params.at("use_init_pol_from_file") > 0){
-        // With policy prior
-        vec2d policy = read_best_pol(dir + "/best_policy.txt");
-        alg.run(params.at("n_steps"), params.at("init_values"), policy, params.at("traj_points"));
-    } else {
-        // With policy and value priors
-        vecd val = read_best_val(dir + "/best_value.txt");
-        vec2d policy = read_best_pol(dir+  "/best_policy.txt");
-        alg.run(params.at("n_steps"), val, policy, params.at("traj_points"));
+Environment* get_env(std::string env_name, const param& params, std::mt19937& generator) {
+    if (env_name == "kite2d"){
+		Wind2d* wind = get_wind2d(params);
+        Environment* env = new Kite2d(params, wind, generator);
+        return env;
     }
+    if (env_name == "kite2d_vrel"){
+		Wind2d* wind = get_wind2d(params);
+        Environment* env = new Kite2d_vrel(params, wind, generator);
+        return env;
+    }
+	if (env_name == "kite3d"){
+		Wind3d* wind = get_wind3d(params);
+        Environment* env = new Kite3d(params, wind, generator);
+        return env;
+    }
+	if (env_name == "kite3d_vrel"){
+		Wind3d* wind = get_wind3d(params);
+        Environment* env = new Kite3d_vrel(params, wind, generator);
+        return env;
+    }
+    else throw std::invalid_argument( "Invalid environment name" );
+}
+
+
+Algorithm* get_alg(Environment* env, const param& params, std::mt19937& generator) {
+
+    std::string alg_name = params.s.at("alg_type");
+
+    if (alg_name == "ac"){
+        return new AC(env, params.d, generator);
+    }
+    else if (alg_name == "nac"){
+		return new NAC_AP(env, params.d, generator);
+    }
+    else throw std::invalid_argument( "Invalid environment name" );
 }

@@ -32,27 +32,53 @@ double plaw_dacay(double t, double t_burn, double expn, double a0, double ac){
     }
 }
 
-dictd parse_param_file(std::string file_path){
+param parse_param_file(std::string file_path){
 
-    dictd dict;
+    dictd paramd;
+    dictvecd paramvecd;
+    dicts params;
+    
     std::ifstream param_file (file_path);
     if (!param_file.is_open())
         throw std::runtime_error("Error in opening the parameter file at "+file_path);
 
     std::string line;
-    while ( getline (param_file, line) )
-    {
+    while ( getline (param_file, line) ) {
         std::size_t tab_pos = line.find("\t");
         std::string key = line.substr(0,tab_pos);
-        double value = std::stod(line.substr(tab_pos+1, std::string::npos));
-        dict[key] = value;
+        std::string value = line.substr(tab_pos+1, std::string::npos);
+
+        std::size_t comma_pos = value.find(",");
+        // Parse a vector
+        if (value.find(",") != std::string::npos){
+            std::size_t comma_pos = value.find(",");
+            std::string elem = value.substr(0, comma_pos);
+            vecd paramv = {std::stod(elem)};
+            std::size_t next_comma_pos = value.find(",", comma_pos+1);
+            while (next_comma_pos != std::string::npos){
+                std::string elem = value.substr(comma_pos+1, next_comma_pos-comma_pos);
+                paramv.push_back(std::stod(elem));
+                comma_pos = next_comma_pos;
+                next_comma_pos = value.find(",", comma_pos+1);
+            }
+            paramvecd[key] = paramv;
+        }
+        else{
+            try {
+                double vald = std::stod(value);
+                paramd[key] = vald;
+            } catch (std::invalid_argument){
+                params[key] = value;
+            }
+        }
+
     }
     param_file.close();
 
-    if (dict.size() == 0)
+    if (paramd.size() == 0 && paramvecd.size() == 0 && params.size() == 0)
         throw std::runtime_error("Empty parameter file");
 
-    return dict;
+    return param{paramd, paramvecd, params};
 }
 
 

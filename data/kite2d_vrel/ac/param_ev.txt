@@ -1,4 +1,0 @@
-ev_time	50
-ep_length	50
-traj_points	1000
-gamma	1

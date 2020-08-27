@@ -19,7 +19,13 @@ def write_params(param_dict, dir_path, file_name):
             print ("Creation of the directory failed")
     f = open(dir_path + file_name, "w")
     for k,v in param_dict.items():
-        f.write(k + "\t" + str(v) + "\n")
+        if type(v) is list or type(v) is np.ndarray:
+            f.write(k + "\t")
+            for i in range(len(v)):
+                f.write(str(v[i])+",")
+            f.write("\n")
+        else:
+            f.write(k + "\t" + str(v) + "\n")
     f.close()
     
 
@@ -28,7 +34,7 @@ def read_params(path):
     params = dict()
     f = open(path, "r")
     for l in f.readlines():
-        params[l.split()[0]] = float(l.split()[1])
+        params[l.split()[0]] = l.split()[1]
     return params
 
     

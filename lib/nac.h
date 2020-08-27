@@ -2,6 +2,7 @@
 #define NAC_H
 
 #include "env.h"
+#include "alg.h"
 
 
 // Here we define the Standard Actor Critic algorithm "AC" that learns the best policy in a 
@@ -17,7 +18,7 @@ using d_i_fnc = std::function<double(int)>;
 
 
 /* Standard Actor Critic algorithm */
-class AC {
+class AC : public Algorithm {
 
     private:
 
@@ -33,8 +34,6 @@ class AC {
         vec2d m_value_traj;
         /* Trajectory of the returns */ 
         vecd m_return_traj;
-        /* Random number generator */ 
-        std::mt19937 m_generator;
 
         // AUX FUNCTIONS
         /* Build constant value parameters */
@@ -46,10 +45,7 @@ class AC {
         /* Reset the variables at episode end */
         void reset_env();
 
-    protected:
-
-        /* MDP to solve */
-        Environment* env;   
+    protected:  
 
         // "CURRENT VARIABLES" CHANGED AT EACH LEARNING STEP
         /* Aggregate state at the current time step of the learning */
@@ -71,6 +67,16 @@ class AC {
         /* Gamma power number of steps from episode onset */
         double curr_gamma_fact;
 
+        // Run for different initial condtions
+        /* Run the algorithm for n_steps, given the initial condition of the values and the policies */
+        void run(int n_steps, vecd init_values, vec2d init_policies, int n_point_traj);
+        /* Run the algorithm for n_steps, given the initial condition of the values and flat policies */
+        void run(int n_steps, vecd init_values, int n_point_traj);
+        /* Run the algorithm for n_steps, given the initial condition of the policies and constant values */
+        void run(int n_steps, double init_values, vec2d init_policies, int n_point_traj);
+        /* Run the algorithm for n_steps, given constant values and flat policies */
+        void run(int n_steps, double init_values, int n_point_traj);
+
         // VIRTUAL FUNCTIONS
         /* Algorithm specific initialization */
         virtual void init_pars() {};
@@ -82,20 +88,11 @@ class AC {
         /* Construct the algorithm given the parameters dictionary */
         AC(Environment* env, const dictd& params, std::mt19937& generator);
 
-        /* Run the algorithm for n_steps, given the initial condition of the values and the policies */
-        void run(int n_steps, vecd init_values, vec2d init_policies, int n_point_traj=2000);
-        /* Run the algorithm for n_steps, given the initial condition of the values and flat policies */
-        void run(int n_steps, vecd init_values, int n_point_traj=2000);
-        /* Run the algorithm for n_steps, given the initial condition of the policies and constant values */
-        void run(int n_steps, double init_values, vec2d init_policies, int n_point_traj=2000);
-        /* Run the algorithm for n_steps, given constant values and flat policies */
-        void run(int n_steps, double init_values, int n_point_traj=2000);
+        /* Run the algorithm */
+        virtual void run(const param& params);
 
-        /* Print the policy and the value trajectories */
-        void print_traj(std::string out_dir) const;
-
-        /* Print the best policy and the best value found */
-        void print_best_pol_val(std::string out_dir) const;
+        /* Print the policy, the value trajectories and their final result */
+        virtual void print_output(std::string out_dir) const;
 };
 
 
@@ -114,8 +111,8 @@ class NAC_AP : public AC {
 
     public:
 
-        NAC_AP(Environment* env, dictd& params, std::mt19937& generator) : 
-        AC{env, params, generator} {};
+        NAC_AP(Environment* env, const dictd& params, std::mt19937& generator) : 
+        AC{env, params, generator} { std::cout << "nac\n";};
 };
 
 

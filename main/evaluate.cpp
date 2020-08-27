@@ -4,6 +4,8 @@
 
 // Evaluate a policy. It must be launched giving the environment_name and the trial_name.
 
+Environment* get_env(std::string env_name, const param& params, std::mt19937& generator);
+
 
 int main(int argc, char** argv) {
 
@@ -18,12 +20,13 @@ int main(int argc, char** argv) {
     std::string env_name(argv[1]);
     std::string alg_name(argv[2]);
     std::string data_dir = "../data/";
-    dictd params = parse_param_file(data_dir + env_name + "/" + alg_name + "/param_env.txt"); // Def in utils
-    dictd ev_params = parse_param_file(data_dir + env_name + "/" + alg_name + "/param_ev.txt");
+
+    param env_params = parse_param_file(data_dir + env_name + "/" + alg_name + "/param_env.txt"); // Def in utils
+    param ev_params = parse_param_file(data_dir + env_name + "/" + alg_name + "/param_ev.txt");
 
     // Constructing the environment.
-    params.at("ep_length") = ev_params.at("ep_length");
-    Environment* env = get_env(env_name, params, generator); // Def in kite.h
+    env_params.d.at("ep_length") = ev_params.d.at("ep_length");
+    Environment* env = get_env(env_name, env_params, generator); // Def in kite.h
     std::cout << "Environment successfully built\n";
 
     // Importing the policy
@@ -31,16 +34,41 @@ int main(int argc, char** argv) {
     std::cout << "Policy imported\n";
 
     // Running the evaluation class
-    Eval eval(env, policy, ev_params, generator);
-    int n_steps = int(ev_params["ev_time"]/params["decision_time"]);
+    Eval eval(env, policy, ev_params.d, generator);
     Timer timer;
     std::cout << "Evaluation started\n";
-    eval.run(n_steps, ev_params["traj_points"]);
+    ev_params.d["decision_time"] = env_params.d["decision_time"];
+    eval.run(ev_params);
     std::cout << "Evaluation completed in " << timer.elapsed() << " seconds\n";
 
-    eval.print_traj(data_dir + env_name + "/" + alg_name + "/");
+    eval.print_output(data_dir + env_name + "/" + alg_name + "/");
 
     delete env;
 
     return 0;
+}
+
+
+Environment* get_env(std::string env_name, const param& params, std::mt19937& generator) {
+    if (env_name == "kite2d"){
+		Wind2d* wind = get_wind2d(params);
+        Environment* env = new Kite2d(params, wind, generator);
+        return env;
+    }
+    if (env_name == "kite2d_vrel"){
+		Wind2d* wind = get_wind2d(params);
+        Environment* env = new Kite2d_vrel(params, wind, generator);
+        return env;
+    }
+	if (env_name == "kite3d"){
+		Wind3d* wind = get_wind3d(params);
+        Environment* env = new Kite3d(params, wind, generator);
+        return env;
+    }
+	if (env_name == "kite3d_vrel"){
+		Wind3d* wind = get_wind3d(params);
+        Environment* env = new Kite3d_vrel(params, wind, generator);
+        return env;
+    }
+    else throw std::invalid_argument( "Invalid environment name" );
 }

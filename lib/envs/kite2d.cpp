@@ -5,7 +5,7 @@
 
 
 /* Constructor */
-Kite2d::Kite2d(const dictd& params, Wind2d* wind, std::mt19937& generator) : 
+Kite2d::Kite2d(const param& params, Wind2d* wind, std::mt19937& generator) : 
 Kite{params, generator}, wind{wind} {
 
 	// BUILDING THE STATE AND ACTION INFORMATION
@@ -33,13 +33,13 @@ Kite{params, generator}, wind{wind} {
 	m_n_aggr_state = m_aggr_state_descr.size();
 
 	// Description of each position of the actions
-	m_act_descr = { "attack_ang_incr", "attack_ang_stay", "attack_ang_decr" };
+	m_act_descr = { "attack_ang_decr", "attack_ang_stay", "attack_ang_incr" };
 	m_n_actions = m_act_descr.size();
 
 	// SETTING SPECIFIC PARAMETERS
-	init_theta = params.at("init_theta");
-	init_dtheta = params.at("init_dtheta");
-    init_alpha_ind = params.at("init_alpha");
+	init_theta = params.d.at("init_theta");
+	init_dtheta = params.d.at("init_dtheta");
+    init_alpha_ind = params.d.at("init_alpha");
 }
 
 
@@ -51,12 +51,6 @@ int Kite2d::aggr_state() const {
 
 /* Initial configuration given the initial theta and dtheta*/
 void Kite2d::reset_kite(){
-
-    // Initial attack angle
-    if (init_alpha_ind >= n_alphas())
-        alpha_ind = std::uniform_int_distribution<int>(0, n_alphas()-1)(m_generator);
-    else 
-        alpha_ind = init_alpha_ind;
 
 	// Block position, velocity, acceleration
     m_state[6] = 0;
@@ -75,12 +69,13 @@ void Kite2d::reset_kite(){
     m_state[4] = -R*init_dtheta*init_dtheta*cos(init_theta);
     m_state[5] = -R*init_dtheta*init_dtheta*sin(init_theta);
 
-    double r_diff[2] = {m_state[0] - m_state[6], m_state[1] - m_state[7]};
+    r_diff[0] = m_state[0] - m_state[6];
+    r_diff[1] = m_state[1] - m_state[7];
     double* v_wind = (*wind).velocity(m_state[0], m_state[1]);
     double va_x = m_state[2] - v_wind[0];
     double va_y = m_state[3] - v_wind[1];
-    double beta = atan2(va_y, va_x);
-    double theta = atan2(r_diff[1], r_diff[0]);
+    beta = atan2(va_y, va_x);
+    theta = atan2(r_diff[1], r_diff[0]);
     t2 = 1;
     if (beta > theta) t2 = 1;
 }
@@ -112,7 +107,7 @@ bool Kite2d::integrate_trajectory() {
 
     // Update positions, velocities and accelerations
     update_state();
-
+    
     // Check if a terminal state is reached. Kite fallen
     if (m_state[1] <= 0) return true;
     return false;
@@ -138,7 +133,7 @@ void Kite2d::compute_F_aer(){
     double aux_l = coef * CL_alpha[alpha_ind];
     double L_x = aux_l * va_y * t2;
     double L_y = -aux_l * va_x * t2;
-    
+
     f_aer[0] = L_x + D_x;
     f_aer[1] = L_y + D_y;
 }
@@ -245,9 +240,11 @@ double Kite2d::terminal_reward(double gamma){
 // KITE 2D HAVING ALSO THE RELATIVE VELOCITY ANGLE AS STATE
 
 
-Kite2d_vrel::Kite2d_vrel(const dictd& params, Wind2d* wind, std::mt19937& generator) :
+Kite2d_vrel::Kite2d_vrel(const param& params, Wind2d* wind, std::mt19937& generator) :
 Kite2d{params, wind, generator} {
-    // Here the aggregate state changes
+
+    beta_bins = params.vecd.at("beta_bins");
+
 	m_aggr_state_descr = vecs(0);
 	for (int a=0; a<n_alphas(); a++) 
         for (int b=0; b<n_betas(); b++) {
@@ -265,5 +262,6 @@ int Kite2d_vrel::aggr_state() const {
             break;
         }
     }
+
     return b + n_betas()*alpha_ind;
 }

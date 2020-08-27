@@ -21,6 +21,16 @@ using vecd = std::vector<double>;
 using vec2d = std::vector<vecd>;
 using vec3d = std::vector<vec2d>;
 using dictd = std::map<std::string, double>;
+using dictvecd = std::map<std::string, vecd>;
+using dicts = std::map<std::string, std::string>;
+
+
+/* Parameters. They can be doubles, vector of doubles or strings */
+struct param {
+	dictd d;
+	dictvecd vecd;
+	dicts s;
+};
 
 
 // BASIC GLOBAL CONSTANTS
@@ -37,11 +47,13 @@ void pol2par_boltzmann(const vecd& policy, vecd& params);
 
 double plaw_dacay(double t, double t_burn, double expn, double a0, double ac);
 
-dictd parse_param_file(std::string file_path);
+param parse_param_file(std::string file_path);
 
 vecd read_best_val(std::string file_path);
 
 vec2d read_best_pol(std::string file_path);
+
+vecd parse_str_of_doubles(std::string str);
 
 
 /* Class for measuring the time between the reset and en enlapsed call */

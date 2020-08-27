@@ -1,9 +1,0 @@
-int_steps	0.0005
-ep_length	50
-decision_time	0.05
-init_theta	0.7853981633974483
-init_dtheta	0
-init_alpha	12
-wind_type	1
-k_wind	0.5
-eps_wind	0.2

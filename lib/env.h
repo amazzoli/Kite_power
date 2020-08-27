@@ -35,7 +35,7 @@ class Environment {
     public:
 
         // CONSTRUCTOR
-        Environment(const dictd& params, std::mt19937& generator) : m_generator{generator} {};
+        Environment(const param& par, std::mt19937& generator) : m_generator{generator} {};
 
         // GET
         /* Get the aggregate-state-space shape */

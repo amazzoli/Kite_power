@@ -1,0 +1,15 @@
+alg_type	nac
+gamma	1.0
+n_steps	20000000
+traj_points	1000
+init_val_path	../data/kite3d_vrel/nac2/init_value.txt
+init_pol_path	../data/kite3d_vrel/nac2/init_policy.txt
+init_values	400.0
+a0	0.01
+ac	20000
+a_expn	0.8
+a_burn	10000000
+b0	5e-05
+bc	100000
+b_expn	0.8
+b_burn	10000000
