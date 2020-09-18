@@ -1,0 +1,13 @@
+alg_type	nac
+gamma	1.0
+n_steps	50000000
+traj_points	1000
+init_values	0
+a0	1e-05
+ac	1000000
+a_expn	1
+a_burn	50000000
+b0	1e-07
+bc	1000000
+b_expn	1
+b_burn	50000000

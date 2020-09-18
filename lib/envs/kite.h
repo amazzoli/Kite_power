@@ -5,7 +5,6 @@
 #include "../wind.h"
 
 
-
 // Header file containing all the environments that can be trained
 
 
@@ -26,14 +25,6 @@ class Kite : public Environment {
 
 	protected:
 
-		// INITIAL CONDITIONS
-		/* Initial angle of the block-kite with the ground */
-		double init_theta;
-		/* Initial angular velocity of the block-kite */
-		double init_dtheta;
-		/* Initial attack angle index. If > n_alphas they are generated at random */
-		int init_alpha_ind;
-
 		// FIXED CONSTANTS
 		/* Kite mass, kg */
 		const double m_kite = 1.0;
@@ -45,13 +36,18 @@ class Kite : public Environment {
 		const double m_block = 40.0;
 		/* Block friction coefficient */
 		const double coef_friction = 0.4;
-
 		/* Penalty of falling */
-		const double fall_penalty = 300;
+		const double fall_penalty = 1000;
 		/* Zero threshold for the velocity */
 		const double v_threshold = 10E-8;
 		
 		// SET BY CONSTRUCTOR
+		/* Initial angle of the block-kite with the ground */
+		double init_theta;
+		/* Initial angular velocity of the block-kite */
+		double init_dtheta;
+		/* Initial attack angle index. If > n_alphas they are generated at random */
+		int init_alpha_ind;
 		/* Integration time step */
 		double h;
 		/* Discretization of the attack angle */
@@ -67,21 +63,24 @@ class Kite : public Environment {
 
 	public:
 
+		/* Constructor */
 		Kite(const param& params, std::mt19937& generator);
+
+		/* Kite description */
+		virtual const std::string descr() const = 0;
 
 		/* Abstract. Get the current aggregate state */
 		virtual int aggr_state() const = 0;
 
 		/* Set the environment in the initial state */
-        virtual void reset_state();
+        virtual int reset_state();
 
 		/* Abstract. Set the specific kite in the initial state */
-        virtual void reset_kite() = 0;
+        virtual int reset_kite() = 0;
 
         /* Step is called before every learning update. It first imposes the action though the env-specific abstract 
-		   method for applying the action "impose_action(int action)". Then it integrates the trajectory for 
-		   "steps_btw_train" calling "integrate_trajectory()". At the end it retruns the env_info at the end with 
-		   "get_rew_and_done()" */
+		   method "impose_action(int action)". Then it integrates the trajectory for "steps_btw_train" times calling 
+		   "integrate_trajectory()". At the end it retruns the env_info with "get_rew_and_done()" */
         virtual env_info step(int action);
 
         /* Abstract. Change the internal state as a consequence of the action */ 
@@ -98,6 +97,7 @@ class Kite : public Environment {
 };
 
 
+/* 2d kite which observes and controls the attack angles */
 class Kite2d : public Kite {
 	
 	protected:
@@ -124,8 +124,9 @@ class Kite2d : public Kite {
 
 		Kite2d(const param& params, Wind2d* wind, std::mt19937& generator);
 		~Kite2d() { delete wind; }
+		virtual const std::string descr() const;
 		virtual int aggr_state() const;
-        virtual void reset_kite();
+        virtual int reset_kite();
         virtual void impose_action(int action);
         virtual bool integrate_trajectory();
         virtual double get_rew(int steps_from_training);
@@ -133,7 +134,7 @@ class Kite2d : public Kite {
 };
 
 
-// Kite in a 3d environment contrained to move on a rail
+/* 3d kite which observes and controls the attack and the bank angles */
 class Kite3d : public Kite {
 	
 	protected:
@@ -141,19 +142,14 @@ class Kite3d : public Kite {
 		/* Generic wind type */
 		Wind3d* wind;
 
-		// INITIAL CONDITIONS
+		// SET BY CONSTRUCTOR
 		/* Initial angle from x axis*/
 		double init_phi;
 		/* Initial agular velocity of phi */
 		double init_dphi;
 		/* Initial index of the bank angle */
 		int init_bank_ind;
-
-		// FIXED CONSTANTS
-		/* Bank angle */
-		// double bank[13] = {-0.1745329, -0.139626340, -0.104719755, -0.069813170, -0.034906585, -0.017453292, 0., \
-		//                        0.0174532, 0.034906585, 0.069813170, 0.104719755, 0.139626340, 0.1745329}; 
-
+		/* Bank angles discretizations */
 		vecd bank; 
 
 		// DYNAMICAL VARIABLES
@@ -166,8 +162,7 @@ class Kite3d : public Kite {
 		double tension[3];
 		double friction;
 
-		// // AUXILIARY FUNCTION FOR THE DYNAMICS
-		// int update_aggr_state(int action);
+		// AUXILIARY FUNCTION FOR THE DYNAMICS
 		void compute_F_aer();
 		void compute_tension_still();
 		void compute_tension_move();
@@ -177,8 +172,9 @@ class Kite3d : public Kite {
 
 		Kite3d(const param& params, Wind3d* wind, std::mt19937& generator);
 		~Kite3d() { delete wind; }
+		virtual const std::string descr() const;
 		virtual int aggr_state() const;
-        virtual void reset_kite();
+        virtual int reset_kite();
         virtual void impose_action(int action);
         virtual bool integrate_trajectory();
         virtual double get_rew(int steps_from_training);
@@ -187,7 +183,7 @@ class Kite3d : public Kite {
 };
 
 
-/* Two-dim kite having in addition the kite-wind relative velocity angle as state */
+/* 2d kite which controls the attack angles and observes the attack and the relative-velocity angles */
 class Kite2d_vrel : public Kite2d {
 	private:
 
@@ -198,12 +194,13 @@ class Kite2d_vrel : public Kite2d {
 	public:
 
 		Kite2d_vrel(const param& params, Wind2d* wind, std::mt19937& generator);
+		virtual const std::string descr() const;
 		virtual int aggr_state() const;
-		/* Number of relative velocity angles */ 
         int n_betas() const { return beta_bins.size()-1; }
 };
 
 
+/* 3d kite which controls the attack and the bank angles and observes the attack, the bank and the relative-velocity angles */
 class Kite3d_vrel : public Kite3d {
 	private:
 
@@ -214,8 +211,8 @@ class Kite3d_vrel : public Kite3d {
 	public:
 
 		Kite3d_vrel(const param& params, Wind3d* wind, std::mt19937& generator);
+		virtual const std::string descr() const;
 		virtual int aggr_state() const;
-		/* Number of relative velocity angles */ 
         int n_betas() const { return beta_bins.size()-1; }
 };
 

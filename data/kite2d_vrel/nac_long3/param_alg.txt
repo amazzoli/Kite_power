@@ -1,0 +1,15 @@
+alg_type	nac
+gamma	1.0
+n_steps	10000000
+traj_points	1000
+init_val_path	../data/kite2d_vrel/nac_long2/best_value.txt
+init_pol_path	../data/kite2d_vrel/nac_long2/best_policy.txt
+init_values	500
+a0	0.0005
+ac	3000000
+a_expn	1
+a_burn	5000000
+b0	5e-07
+bc	50
+b_expn	0.8
+b_burn	10000000

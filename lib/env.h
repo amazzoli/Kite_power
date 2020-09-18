@@ -38,6 +38,8 @@ class Environment {
         Environment(const param& par, std::mt19937& generator) : m_generator{generator} {};
 
         // GET
+        /* Abstract. Get the description of the environment */
+        virtual const std::string descr() const = 0;
         /* Get the aggregate-state-space shape */
         unsigned int n_aggr_state() const { return m_n_aggr_state; }
         /* Get the number of actions */
@@ -54,8 +56,8 @@ class Environment {
         // ABSTRACT/VIRTUAL
         /* Get the current aggregate state */
         virtual int aggr_state() const = 0;
-        /* Set the environment in the initial state */
-        virtual void reset_state() = 0;
+        /* Set the environment in the initial state and returns the state */
+        virtual int reset_state() = 0;
         /* Environmental transition given the action which modifies the 
            internal state and return the reward and the termination flag. */
         virtual env_info step(int action) = 0;

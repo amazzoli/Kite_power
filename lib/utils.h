@@ -17,12 +17,14 @@
 using vecs = std::vector<std::string>;
 using vecf = std::vector<float>;
 using veci = std::vector<int>;
+using vec2i = std::vector<veci>;
 using vecd = std::vector<double>;
 using vec2d = std::vector<vecd>;
 using vec3d = std::vector<vec2d>;
 using dictd = std::map<std::string, double>;
 using dictvecd = std::map<std::string, vecd>;
 using dicts = std::map<std::string, std::string>;
+using d_i_fnc = std::function<double(int)>;
 
 
 /* Parameters. They can be doubles, vector of doubles or strings */
@@ -47,11 +49,15 @@ void pol2par_boltzmann(const vecd& policy, vecd& params);
 
 double plaw_dacay(double t, double t_burn, double expn, double a0, double ac);
 
+vecd str2vecd(std::string line, std::string separator, bool sep_at_end);
+
 param parse_param_file(std::string file_path);
 
-vecd read_best_val(std::string file_path);
+vecd read_value(std::string file_path);
 
-vec2d read_best_pol(std::string file_path);
+vec2d read_quality(std::string file_path);
+
+vec2d read_policy(std::string file_path);
 
 vecd parse_str_of_doubles(std::string str);
 

@@ -32,6 +32,45 @@ double plaw_dacay(double t, double t_burn, double expn, double a0, double ac){
     }
 }
 
+
+vecd str2vecd(std::string line, std::string separator, bool sep_at_end) {
+    std::size_t sep_pos = line.find(separator);
+    if (sep_pos == std::string::npos) {
+        if (sep_at_end)
+            throw std::runtime_error(separator + " separator not found in " + line);
+        else {
+            vecd v = {std::stod(line.substr(0, sep_pos))};
+            return v;
+        }
+    }
+
+    std::string elem = line.substr(0, sep_pos);
+    vecd v = vecd(0);
+    try {
+        v.push_back(std::stod(elem));
+    }
+    catch (std::exception& e){
+        v.push_back(0);
+    }
+
+    while (true){
+        std::size_t next_sep_pos = line.find(separator, sep_pos+1);
+        if (sep_at_end && next_sep_pos == std::string::npos) break;
+        std::string elem = line.substr(sep_pos+1, next_sep_pos-sep_pos);
+        try{
+            v.push_back(std::stod(elem));
+        }
+        catch (std::exception& e){
+            v.push_back(0);
+        }
+        if (!sep_at_end && next_sep_pos == std::string::npos) break;
+        sep_pos = next_sep_pos;
+    }
+
+    return v;
+}
+
+
 param parse_param_file(std::string file_path){
 
     dictd paramd;
@@ -49,29 +88,17 @@ param parse_param_file(std::string file_path){
         std::string value = line.substr(tab_pos+1, std::string::npos);
 
         std::size_t comma_pos = value.find(",");
-        // Parse a vector
         if (value.find(",") != std::string::npos){
-            std::size_t comma_pos = value.find(",");
-            std::string elem = value.substr(0, comma_pos);
-            vecd paramv = {std::stod(elem)};
-            std::size_t next_comma_pos = value.find(",", comma_pos+1);
-            while (next_comma_pos != std::string::npos){
-                std::string elem = value.substr(comma_pos+1, next_comma_pos-comma_pos);
-                paramv.push_back(std::stod(elem));
-                comma_pos = next_comma_pos;
-                next_comma_pos = value.find(",", comma_pos+1);
-            }
-            paramvecd[key] = paramv;
+            paramvecd[key] = str2vecd(value, ",", true); // Parse a vector
         }
         else{
             try {
-                double vald = std::stod(value);
+                double vald = std::stod(value); // Parse a double
                 paramd[key] = vald;
             } catch (std::invalid_argument){
-                params[key] = value;
+                params[key] = value; // Parse a string if stod gives exception
             }
         }
-
     }
     param_file.close();
 
@@ -82,7 +109,7 @@ param parse_param_file(std::string file_path){
 }
 
 
-vec2d read_best_pol(std::string file_path) {
+vec2d read_policy(std::string file_path) {
 
     vec2d policy(0);
     std::ifstream pol_file (file_path);
@@ -92,19 +119,11 @@ vec2d read_best_pol(std::string file_path) {
     std::string line;
     while ( getline (pol_file, line) )
     {
-        std::size_t tab_pos = line.find(" ");
-        std::string p = line.substr(0, tab_pos);
-        vecd pol_at_state = {std::stod(p)};
-        double cum_p = std::stod(p);
-        while (tab_pos != std::string::npos){
-            std::size_t next_tab_pos = line.find(" ", tab_pos+1);
-            std::string p = line.substr(tab_pos+1, next_tab_pos-tab_pos);
-            pol_at_state.push_back(std::stod(p));
-            cum_p += std::stod(p);
-            tab_pos = next_tab_pos;
-        }
+        vecd pol_at_state = str2vecd(line, " ", false);
+        double cum_p=0;
+        for (const double p : pol_at_state) cum_p+=p;
         if (cum_p > 1+10E-6) 
-            throw std::runtime_error("Not normalized policy in "+file_path+" "+std::to_string(cum_p));
+            throw std::runtime_error("Not normalized policy at "+file_path+" "+std::to_string(cum_p));
         pol_at_state.push_back(1-cum_p);
         policy.push_back(pol_at_state);
     }
@@ -114,7 +133,23 @@ vec2d read_best_pol(std::string file_path) {
 }
 
 
-vecd read_best_val(std::string file_path) {
+vec2d read_quality(std::string file_path) {
+
+    vec2d quality(0);
+    std::ifstream pol_file (file_path);
+    if (!pol_file.is_open())
+        throw std::runtime_error("Error in opening the best_policy file at "+file_path);
+
+    std::string line;
+    while ( getline (pol_file, line) )
+        quality.push_back(str2vecd(line, ",", false));
+    pol_file.close();
+
+    return quality;
+}
+
+
+vecd read_value(std::string file_path) {
 
     vecd val(0);
     std::ifstream val_file (file_path);

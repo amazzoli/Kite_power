@@ -17,7 +17,7 @@ Kite::Kite(const param& params, std::mt19937& generator) : Environment{params, g
 }
 
 
-void Kite::reset_state(){
+int Kite::reset_state(){
 
     // Initial attack angle
     if (init_alpha_ind >= n_alphas())
@@ -26,7 +26,7 @@ void Kite::reset_state(){
         alpha_ind = init_alpha_ind;
 		
 	curr_ep_step = 0;
-	reset_kite();
+	return reset_kite();
 }
 
 

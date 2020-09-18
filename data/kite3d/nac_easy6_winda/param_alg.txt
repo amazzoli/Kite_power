@@ -1,0 +1,15 @@
+alg_type	nac
+gamma	1.0
+n_steps	5000000
+traj_points	1000
+init_val_path	../data/kite3d/nac_easy6_wind/best_value.txt
+init_pol_path	../data/kite3d/nac_easy6_wind/best_policy.txt
+init_values	0
+a0	2e-05
+ac	2000
+a_expn	1
+a_burn	5000000
+b0	1e-06
+bc	1000000
+b_expn	1
+b_burn	5000000

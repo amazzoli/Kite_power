@@ -43,6 +43,10 @@ Kite{params, generator}, wind{wind} {
 }
 
 
+const std::string Kite2d::descr() const {
+    return "2d kite. Attack angle observed. Attack angle controlled. " + wind->descr();
+}
+
 /* Aggregate state: it is defined by the current attack angle */
 int Kite2d::aggr_state() const {
 	return alpha_ind;
@@ -50,7 +54,7 @@ int Kite2d::aggr_state() const {
 
 
 /* Initial configuration given the initial theta and dtheta*/
-void Kite2d::reset_kite(){
+int Kite2d::reset_kite(){
 
 	// Block position, velocity, acceleration
     m_state[6] = 0;
@@ -78,6 +82,8 @@ void Kite2d::reset_kite(){
     theta = atan2(r_diff[1], r_diff[0]);
     t2 = 1;
     if (beta > theta) t2 = 1;
+
+    return aggr_state();
 }
 
 
@@ -109,7 +115,9 @@ bool Kite2d::integrate_trajectory() {
     update_state();
     
     // Check if a terminal state is reached. Kite fallen
-    if (m_state[1] <= 0) return true;
+    if (m_state[1] <= 0) {
+        return true;
+    }
     return false;
 }
 
@@ -252,6 +260,11 @@ Kite2d{params, wind, generator} {
             m_aggr_state_descr.push_back("attack_ang_"+std::to_string(alphas[a])+",vrel_angle_"+std::to_string(ref_beta));
         }
 	m_n_aggr_state = m_aggr_state_descr.size();
+}
+
+
+const std::string Kite2d_vrel::descr() const {
+    return "2d kite. Attack angle and relative-velocity angle observed. Attack angle controlled. " + wind->descr();
 }
 
 

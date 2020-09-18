@@ -1,0 +1,13 @@
+alg_type	sarsa
+gamma	1.0
+n_steps	40000000
+traj_points	1000
+init_quals	500.0
+lr0	0.2
+lrc	100
+lr_expn	1
+lr_burn	10000
+eps0	0.05
+epsc	1000
+eps_expn	1
+eps_burn	5000

@@ -50,6 +50,11 @@ Kite{params, generator}, wind{wind} {
 }
 
 
+const std::string Kite3d::descr() const {
+    return "3d kite. Attack and bank angles observed. Attack and bank angles controlled. " + wind->descr();
+}
+
+
 /* Aggregate state: it is defined by the current attack angle and bank angle */
 int Kite3d::aggr_state() const {
 	return bank_ind + n_banks() * alpha_ind;
@@ -57,7 +62,7 @@ int Kite3d::aggr_state() const {
 
 
 /* Initial configuration given the initial theta and dtheta*/
-void Kite3d::reset_kite(){
+int Kite3d::reset_kite(){
 
     // Initial bank angle (attack angle set in base class)
     bank_ind = init_bank_ind;
@@ -87,6 +92,8 @@ void Kite3d::reset_kite(){
     beta = atan2(va[2], va[0]);
     theta = atan2(sqrt(x_diff*x_diff + m_state[1]*m_state[1]), m_state[2]);
     phi = atan2(m_state[1], x_diff);
+
+    return aggr_state();
 }
 
 
@@ -134,7 +141,7 @@ bool Kite3d::integrate_trajectory() {
     theta = atan2(sqrt(x_diff*x_diff + m_state[1]*m_state[1]), m_state[2]);
     phi = atan2(m_state[1], x_diff);
 
-    // Aeroynamical forces
+    // Aerodynamical forces
     compute_F_aer();
 
     // Tension and friction
@@ -161,6 +168,7 @@ void Kite3d::compute_F_aer(){
     beta = atan2(va[2], va[0]);
 
     double t1[3] = {sin(theta)*cos(phi), sin(theta)*sin(phi), cos(theta)}; 
+    if (m_state[1] == 0) t1[1] = 0; // Errore in approx quando phi=pi-greco
     double t2[3] = {t1[1]*va[2] - t1[2]*va[1], t1[2]*va[0] - t1[0]*va[2], t1[0]*va[1] - t1[1]*va[0]};
     double t2_mod = sqrt(t2[0]*t2[0] + t2[1]*t2[1] + t2[2]*t2[2]);
     t2[0] /= t2_mod; t2[1] /= t2_mod; t2[2] /= t2_mod;
@@ -297,6 +305,11 @@ Kite3d{params, wind, generator} {
 		        m_aggr_state_descr.push_back("attack_ang_"+std::to_string(alphas[a])+",bank_angle_"+std::to_string(bank[p])+",vrel_angle_"+std::to_string(beta));
             }
 	m_n_aggr_state = m_aggr_state_descr.size();
+}
+
+
+const std::string Kite3d_vrel::descr() const {
+    return "3d kite. Attack, bank and relative-velocity angles observed. Attack and bank angles controlled. " + wind->descr();
 }
 
 

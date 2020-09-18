@@ -1,7 +1,6 @@
 #ifndef NAC_H
 #define NAC_H
 
-#include "env.h"
 #include "alg.h"
 
 
@@ -13,45 +12,34 @@
 // All the methods are written in "nac.cpp"
 
 
-// Type for the learning rates scheduling
-using d_i_fnc = std::function<double(int)>;
-
-
 /* Standard Actor Critic algorithm */
-class AC : public Algorithm {
+class AC : public RLAlgorithm {
 
     private:
-
-        /* Discount factor */
-        double m_gamma;   
+ 
         /* Critic learning rate dependent on time */
-        d_i_fnc m_lr_crit;
+        d_i_fnc lr_crit;
         /* Actor learning rate dependent on time */
-        d_i_fnc m_lr_act;  
+        d_i_fnc lr_act;  
         /* Trajectory of the policy parameters */ 
-        vec3d m_policy_par_traj;
+        vec3d policy_par_traj;
         /* Trajectory of the values */ 
-        vec2d m_value_traj;
-        /* Trajectory of the returns */ 
-        vecd m_return_traj;
+        vec2d value_traj;
+        /* Which aggregate states are stored in the trajectory (to save space) */
+        veci traj_states;
+        /* Trajectory of the learning rates */ 
+        vec2d lr_traj;
+
 
         // AUX FUNCTIONS
         /* Build constant value parameters */
         vecd const_values(double val);
         /* Build a flat policy */
         vec2d flat_policy();
-        /* Initialization of the variables before running */ 
-        void init(vecd init_values, vec2d init_policies);
-        /* Reset the variables at episode end */
-        void reset_env();
 
     protected:  
 
         // "CURRENT VARIABLES" CHANGED AT EACH LEARNING STEP
-        /* Aggregate state at the current time step of the learning */
-        int curr_aggr_state;
-        /* Chosen action at the current time step of the learning */
-        int curr_action;
         /* Policy at the current time step of the learning */
         vecd curr_policy;
         /* Critic learning rate at the current time step of the learning */
@@ -62,37 +50,25 @@ class AC : public Algorithm {
         vecd curr_v_pars;
         /* Policy/actor parameters */
         vec2d curr_p_pars;
-        /* Return of the episode */
-        double curr_return;
-        /* Gamma power number of steps from episode onset */
-        double curr_gamma_fact;
 
-        // Run for different initial condtions
-        /* Run the algorithm for n_steps, given the initial condition of the values and the policies */
-        void run(int n_steps, vecd init_values, vec2d init_policies, int n_point_traj);
-        /* Run the algorithm for n_steps, given the initial condition of the values and flat policies */
-        void run(int n_steps, vecd init_values, int n_point_traj);
-        /* Run the algorithm for n_steps, given the initial condition of the policies and constant values */
-        void run(int n_steps, double init_values, vec2d init_policies, int n_point_traj);
-        /* Run the algorithm for n_steps, given constant values and flat policies */
-        void run(int n_steps, double init_values, int n_point_traj);
+        // METHODS TO OVERRIDE
+        virtual void init(const param& params);
+        virtual int get_action();
+        virtual void learning_update();
+        virtual void build_traj();
+        virtual void print_traj(std::string out_dir) const;
 
-        // VIRTUAL FUNCTIONS
-        /* Algorithm specific initialization */
-        virtual void init_pars() {};
-        /* Actor delta update */
-        virtual void  delta_act_updt(double td_error);
+        // CHILD ALGORITHM METHODS
+        virtual void child_init() {};
+        virtual void child_update(double td_error);
 
     public:
 
         /* Construct the algorithm given the parameters dictionary */
-        AC(Environment* env, const dictd& params, std::mt19937& generator);
+        AC(Environment* env, const param& params, std::mt19937& generator);
 
-        /* Run the algorithm */
-        virtual void run(const param& params);
-
-        /* Print the policy, the value trajectories and their final result */
-        virtual void print_output(std::string out_dir) const;
+        /* Algorithm description */
+        const std::string descr() const { return "Actor critic algorithm."; }
 };
 
 
@@ -106,13 +82,15 @@ class NAC_AP : public AC {
 
     protected:
 
-        virtual void init_pars();
-        virtual void delta_act_updt(vec2d& policy_pars, double td_error);
+        virtual void child_init();
+        virtual void child_update(double td_error);
 
     public:
 
-        NAC_AP(Environment* env, const dictd& params, std::mt19937& generator) : 
-        AC{env, params, generator} { std::cout << "nac\n";};
+        NAC_AP(Environment* env, const param& params, std::mt19937& generator) : 
+        AC{env, params, generator} {};
+
+        const std::string descr() const { return "Natural actor critic with advantage parameters algorithm."; }
 };
 
 
