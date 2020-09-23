@@ -50,6 +50,53 @@ class Wind3d_const : public Wind3d {
 };   
 
 
+class Wind3d_lin : public Wind3d {
+
+    private:
+        /* Wind x speed on the gorund */
+        double vel_ground;
+        /* Angular coefficient of the wind profile */
+        double ang_coef;
+
+    public:
+        Wind3d_lin(double vel_ground, double ang_coef) : vel_ground{vel_ground}, ang_coef{ang_coef} 
+        { m_vel[1] = 0; m_vel[2]=0; };
+
+        virtual double* velocity(double x, double y, double z) { 
+            m_vel[0] = ang_coef * z + vel_ground;
+            return m_vel; 
+        }
+
+        const std::string descr() const 
+        { return "3d wind parallel to x-axis and linearly increasing with the height."; }
+};  
+
+
+class Wind3d_log : public Wind3d {
+
+    private:
+        double vr;
+        double z0;
+
+    public:
+        Wind3d_log(double vr, double z0) : vr{vr}, z0{z0} 
+        { m_vel[1] = 0; m_vel[2]=0; };
+
+        virtual double* velocity(double x, double y, double z) { 
+            double arg = z/z0;
+            if (z/z0 <= 0) 
+                m_vel[0] = 0;
+            else 
+                m_vel[0] = vr * log(arg);
+                
+            return m_vel; 
+        }
+
+        const std::string descr() const 
+        { return "3d wind parallel to x-axis and logarithmically increasing with the height."; }
+};  
+
+
 Wind2d* get_wind2d(const param& params);
 
 Wind3d* get_wind3d(const param& params);

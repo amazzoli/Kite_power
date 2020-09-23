@@ -25,15 +25,6 @@ double* Wind2d_stream::velocity(double x, double y){
 }
 
 
-// void streamfunction3d_hard(double *rk, double *W){ // kp kiteposition in (x,y,z)
-
-//     W[0] = 0.5*k_wind*rk[2]*(2*epsilon_wind_hard*sin(PI*rk[0]/Lx)*sin(PI*rk[2]/Ly) + \
-//       epsilon_wind_hard*PI*rk[2]/Ly*sin(PI*rk[0]/Lx)*cos(PI*rk[2]/Ly) + 2);
-//     W[1] = 0;
-//     W[2] = -k_wind*epsilon_wind_hard*PI*rk[2]*rk[2]/(2*Lx)*cos(PI*rk[0]/Lx)*sin(PI*rk[2]/Ly);
-// }
-
-
 Wind3d* get_wind3d(const param& params) {
     
     std::string wind_type = params.s.at("wind_type");
@@ -41,6 +32,12 @@ Wind3d* get_wind3d(const param& params) {
     if (wind_type == "const") { // Constant wind
         double v[] = {params.d.at("v_wind_x"), params.d.at("v_wind_y"), params.d.at("v_wind_z")};
         return new Wind3d_const(v);
+    }
+    if (wind_type == "lin") { // Linear wind
+        return new Wind3d_lin(params.d.at("v_ground"), params.d.at("v_ang_coef"));
+    }
+    if (wind_type == "log") { // Logarithmic wind
+        return new Wind3d_log(params.d.at("vr"), params.d.at("z0"));
     }
     
     else throw std::invalid_argument( "Invalid wind type" );
