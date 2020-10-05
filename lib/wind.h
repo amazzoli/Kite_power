@@ -16,6 +16,7 @@ class Wind2d {
 class Wind3d {
     protected:
         double m_vel[3];
+
     public:
         virtual double* velocity(double x, double y, double z) = 0;
         virtual const std::string descr() const = 0;
@@ -97,9 +98,32 @@ class Wind3d_log : public Wind3d {
 };  
 
 
+class Wind3d_turboframe : public Wind3d {
+
+    private:
+        const static int n_grid_points = 185193;
+        const static int n_axis_points = 57;
+        constexpr static double x_size = 100.531;
+        constexpr static double y_size = 50;
+        constexpr static double z_size = 100.531;
+        double q_grid[n_grid_points][3];
+        double v_grid[n_grid_points][3];
+
+    public:
+        Wind3d_turboframe(const param& params);
+
+        virtual double* velocity(double x, double y, double z);
+
+        const std::string descr() const 
+        { return "3d wind. Static frame of a turbolent flow."; }
+};  
+
+
 Wind2d* get_wind2d(const param& params);
 
 Wind3d* get_wind3d(const param& params);
+
+double interpolation(double q_d[], double vel[]);
 
 
 #endif
