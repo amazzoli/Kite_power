@@ -8,37 +8,9 @@
 Kite2d::Kite2d(const param& params, Wind2d* wind, std::mt19937& generator) : 
 Kite{params, generator}, wind{wind} {
 
-	// BUILDING THE STATE AND ACTION INFORMATION
-	// Description of each position of the full state vector
-	m_state_descr = {
-		"kite_pos_x",	// 0
-		"kite_pos_y",	// 1
-		"kite_vel_x",	// 2
-		"kite_vel_y",	// 3
-		"kite_acc_x",	// 4 
-		"kite_acc_y",	// 5
-		"block_pos_x",	// 6
-		"block_pos_y",	// 7
-		"block_vel_x",	// 8
-		"block_vel_y",	// 9
-		"block_acc_x",	// 10 
-		"block_acc_y",	// 11
-	};
-    m_state = vecd(m_state_descr.size());
-
-	// Description of each position of the aggregate state vector
-	m_aggr_state_descr = vecs(0);
-	for (int a=0; a<n_alphas(); a++) 
-		m_aggr_state_descr.push_back("attack_ang_"+std::to_string(alphas[a]));
-	m_n_aggr_state = m_aggr_state_descr.size();
-
-	// Description of each position of the actions
-	m_act_descr = { "attack_ang_decr", "attack_ang_stay", "attack_ang_incr" };
-	m_n_actions = m_act_descr.size();
-
-	// SETTING SPECIFIC PARAMETERS
-	init_theta = params.d.at("init_theta");
-	init_dtheta = params.d.at("init_dtheta");
+    m_state = vecd(state_descr().size());
+    init_theta = params.d.at("init_theta");
+    init_dtheta = params.d.at("init_dtheta");
     init_alpha_ind = params.d.at("init_alpha");
 }
 
@@ -47,16 +19,50 @@ const std::string Kite2d::descr() const {
     return "2d kite. Attack angle observed. Attack angle controlled. " + wind->descr();
 }
 
+
+const vecs Kite2d::state_descr() const {
+    vecs m_state_descr = {
+        "kite_pos_x",   // 0
+        "kite_pos_y",   // 1
+        "kite_vel_x",   // 2
+        "kite_vel_y",   // 3
+        "kite_acc_x",   // 4 
+        "kite_acc_y",   // 5
+        "block_pos_x",  // 6
+        "block_pos_y",  // 7
+        "block_vel_x",  // 8
+        "block_vel_y",  // 9
+        "block_acc_x",  // 10 
+        "block_acc_y",  // 11
+    };
+    return m_state_descr;
+}
+
+
+const vecs Kite2d::aggr_state_descr() const {
+    vecs m_aggr_state_descr = vecs(0);
+    for (int a=0; a<n_alphas(); a++) 
+        m_aggr_state_descr.push_back("attack_ang_"+std::to_string(alphas[a]));
+    return m_aggr_state_descr;
+}
+
+
+const vecs Kite2d::action_descr() const {
+    vecs m_act_descr = { "attack_ang_decr", "attack_ang_stay", "attack_ang_incr" };
+    return m_act_descr;
+}
+
+
 /* Aggregate state: it is defined by the current attack angle */
 int Kite2d::aggr_state() const {
-	return alpha_ind;
+    return alpha_ind;
 }
 
 
 /* Initial configuration given the initial theta and dtheta*/
 int Kite2d::reset_kite(){
 
-	// Block position, velocity, acceleration
+    // Block position, velocity, acceleration
     m_state[6] = 0;
     m_state[7] = 0;
     m_state[8] = 0;
@@ -66,7 +72,7 @@ int Kite2d::reset_kite(){
     // Kite position
     m_state[0] = m_state[6] + R*cos(init_theta);
     m_state[1] = m_state[7] + R*sin(init_theta);
-	// Kite velocity
+    // Kite velocity
     m_state[2] = -R*init_dtheta*sin(init_theta);
     m_state[3] = R*init_dtheta*cos(init_theta);
     // Kite acceleration
@@ -252,14 +258,6 @@ Kite2d_vrel::Kite2d_vrel(const param& params, Wind2d* wind, std::mt19937& genera
 Kite2d{params, wind, generator} {
 
     beta_bins = params.vecd.at("beta_bins");
-
-	m_aggr_state_descr = vecs(0);
-	for (int a=0; a<n_alphas(); a++) 
-        for (int b=0; b<n_betas(); b++) {
-            double ref_beta = (beta_bins[b+1] + beta_bins[b]) / 2.0;
-            m_aggr_state_descr.push_back("attack_ang_"+std::to_string(alphas[a])+",vrel_angle_"+std::to_string(ref_beta));
-        }
-	m_n_aggr_state = m_aggr_state_descr.size();
 }
 
 
@@ -267,6 +265,15 @@ const std::string Kite2d_vrel::descr() const {
     return "2d kite. Attack angle and relative-velocity angle observed. Attack angle controlled. " + wind->descr();
 }
 
+const vecs Kite2d_vrel::aggr_state_descr() const {
+    vecs m_aggr_state_descr = vecs(0);
+    for (int a=0; a<n_alphas(); a++) 
+        for (int b=0; b<n_betas(); b++) {
+            double ref_beta = (beta_bins[b+1] + beta_bins[b]) / 2.0;
+            m_aggr_state_descr.push_back("attack_ang_"+std::to_string(alphas[a])+",vrel_angle_"+std::to_string(ref_beta));
+        }
+    return m_aggr_state_descr;
+}
 
 int Kite2d_vrel::aggr_state() const {
     int b;

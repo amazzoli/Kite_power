@@ -17,15 +17,17 @@ int main(int argc, char** argv) {
 
     Wind3d* wind = get_wind3d(params);
 
-    double q[3] = {0, 50, 50};
+    double q[3] = {0, 50, 30};
     double* v_wind;
     double dt = 0.001;
-    for (int t=0; t<1000; t++){
+    double v=0;
+    for (int t=0; t<100; t++){
     	v_wind = (*wind).velocity(q[0], q[1], q[2]);
     	q[0] += v_wind[0]*dt;
     	q[1] += v_wind[1]*dt;
-    	q[2] += v_wind[2]*dt;
-    	std::cout << q[0] << " " << q[1] << " " << q[2] << "\n";
+    	q[2] += (10+v_wind[2])*dt;
+        std::cout << q[2] << " " << v_wind[2] << " " << v_wind[2]-v << "\n";
+        v = v_wind[2];
     }
 
 

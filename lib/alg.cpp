@@ -33,8 +33,13 @@ void RLAlgorithm::run(const param& params) {
         curr_info = (*env).step(curr_action);
         ret += curr_info.reward * curr_gamma_fact;
         curr_new_aggr_state = (*env).aggr_state();
-        //std::cout << curr_aggr_state << " " << curr_action << " " << curr_new_aggr_state << " " << curr_info.done << "\n";
-        
+
+        //std::cout << curr_aggr_state << " " << curr_action << " " << curr_new_aggr_state << " " << curr_info.reward << " " << curr_info.done << "\n";
+        // vecd state = (*env).state();
+        // for (const double& s : state)
+        //     std::cout << s << " ";
+        //std::cout << "\n\n";
+
         // Algorithm-specific update
         learning_update();
 

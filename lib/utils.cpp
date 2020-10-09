@@ -1,4 +1,5 @@
 #include "utils.h"
+#include <cctype>
 
 
 void par2pol_boltzmann(const vecd& params, vecd& policy){
@@ -96,6 +97,8 @@ param parse_param_file(std::string file_path){
                 double vald = std::stod(value); // Parse a double
                 paramd[key] = vald;
             } catch (std::invalid_argument){
+                if (isspace(value[value.size()-1]))
+                    value = value.substr(0,value.size()-1);
                 params[key] = value; // Parse a string if stod gives exception
             }
         }

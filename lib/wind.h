@@ -4,21 +4,13 @@
 #include "utils.h"
 
 
+// 2D WINDS
+
 class Wind2d {
     protected:
         double m_vel[2];
     public:
         virtual double* velocity(double x, double y) = 0;
-        virtual const std::string descr() const = 0;
-};
-
-
-class Wind3d {
-    protected:
-        double m_vel[3];
-
-    public:
-        virtual double* velocity(double x, double y, double z) = 0;
         virtual const std::string descr() const = 0;
 };
 
@@ -43,6 +35,21 @@ class Wind2d_stream : public Wind2d {
 };   
 
 
+// 3D WINDS
+
+/* Abstract class */
+class Wind3d {
+    protected:
+        /* Velocity variable that is referenced to by velocity method*/
+        double m_vel[3];
+
+    public:
+        virtual double* init(double x0, double y0, double z0) { return velocity(x,y,z) };
+        virtual double* velocity(double x, double y, double z) = 0;
+        virtual const std::string descr() const = 0;
+};
+
+/* Constant wind */
 class Wind3d_const : public Wind3d {
     public:
         Wind3d_const(double vel[3]) { m_vel[0] = vel[0]; m_vel[1] = vel[1]; ; m_vel[2] = vel[2];  };
@@ -50,7 +57,7 @@ class Wind3d_const : public Wind3d {
         const std::string descr() const { return "3d constant wind."; }
 };   
 
-
+/* Linear wind */
 class Wind3d_lin : public Wind3d {
 
     private:
@@ -72,7 +79,7 @@ class Wind3d_lin : public Wind3d {
         { return "3d wind parallel to x-axis and linearly increasing with the height."; }
 };  
 
-
+/* Logarithmic wind */
 class Wind3d_log : public Wind3d {
 
     private:
@@ -81,38 +88,52 @@ class Wind3d_log : public Wind3d {
 
     public:
         Wind3d_log(double vr, double z0) : vr{vr}, z0{z0} 
-        { m_vel[1] = 0; m_vel[2]=0; };
-
-        virtual double* velocity(double x, double y, double z) { 
-            double arg = z/z0;
-            if (z/z0 <= 0) 
-                m_vel[0] = 0;
-            else 
-                m_vel[0] = vr * log(arg);
-                
-            return m_vel; 
-        }
-
-        const std::string descr() const 
+        { m_vel[1] = 0; m_vel[2] = 0; };
+        virtual double* velocity(double x, double y, double z);
+        const std::string descr() const
         { return "3d wind parallel to x-axis and logarithmically increasing with the height."; }
 };  
 
+/* Logarithmic wind plus noise */
+class Wind3d_lognoise : public Wind3d {
 
+    private:
+        double vr;
+        double z0;
+        std::mt19937 generator;
+        std::normal_distribution<double> normalx;
+        std::normal_distribution<double> normaly;
+        std::normal_distribution<double> normalz;
+
+    public:
+        Wind3d_lognoise(double vr, double z0, const vecd std, std::mt19937& generator);
+        virtual double* velocity(double x, double y, double z);
+        const std::string descr() const 
+        { return "3d wind parallel to x-axis and logarithmically increasing with the height. Additive gaussian noise."; }
+};  
+
+/* Wind of a static frame of a turbolent flow */
 class Wind3d_turboframe : public Wind3d {
 
     private:
         const static int n_grid_points = 185193;
         const static int n_axis_points = 57;
         constexpr static double x_size = 100.531;
-        constexpr static double y_size = 50;
-        constexpr static double z_size = 100.531;
+        constexpr static double y_size = 100.531;
+        constexpr static double z_half_size = 50;
         double q_grid[n_grid_points][3];
         double v_grid[n_grid_points][3];
+        double wind_amplif;
+        int n_x, n_y, n_z;
+        
+        void read_grid_file(std::string path, double grid_data[][3]);
+        double interpolation(double q_d[], double vel[]);
 
     public:
         Wind3d_turboframe(const param& params);
 
-        virtual double* velocity(double x, double y, double z);
+        double* init(double x, double y, double z);
+        double* velocity(double x, double y, double z);
 
         const std::string descr() const 
         { return "3d wind. Static frame of a turbolent flow."; }
@@ -121,7 +142,7 @@ class Wind3d_turboframe : public Wind3d {
 
 Wind2d* get_wind2d(const param& params);
 
-Wind3d* get_wind3d(const param& params);
+Wind3d* get_wind3d(const param& params, std::mt19937& generator);
 
 double interpolation(double q_d[], double vel[]);
 

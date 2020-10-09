@@ -17,18 +17,6 @@ class Environment {
 
     protected:
 
-        /* Size of the aggregate state space */
-        unsigned int m_n_aggr_state;
-        /* Number of actions */
-        unsigned int m_n_actions;
-        /* Current state */
-        vecd m_state;
-        // Descriptors of each position of m_state
-        vecs m_state_descr;
-        // Descriptors of each aggregate state
-        vecs m_aggr_state_descr;
-        // Descriptors of each action
-        vecs m_act_descr;
         /* Random number generator */ 
         std::mt19937 m_generator;
 
@@ -37,23 +25,20 @@ class Environment {
         // CONSTRUCTOR
         Environment(const param& par, std::mt19937& generator) : m_generator{generator} {};
 
-        // GET
         /* Abstract. Get the description of the environment */
         virtual const std::string descr() const = 0;
         /* Get the aggregate-state-space shape */
-        unsigned int n_aggr_state() const { return m_n_aggr_state; }
+        virtual unsigned int n_aggr_state() const = 0;
         /* Get the number of actions */
-        unsigned int n_actions() const { return m_n_actions; }
+        virtual unsigned int n_actions() = 0;
         /* Get the current state */
-        vecd state() const { return m_state; }
+        virtual const vecd& state() = 0;
         /* Get the description of each state index */
-        const vecs& state_descr() const { return m_state_descr; }
+        virtual const vecs state_descr() const = 0;
         /* Get the description of each aggregare state */
-        const vecs& aggr_state_descr() const { return m_aggr_state_descr; }
+        virtual const vecs aggr_state_descr() const = 0;
         /* Get the description of each action */
-        const vecs& action_descr() const { return m_act_descr; }
-
-        // ABSTRACT/VIRTUAL
+        virtual const vecs action_descr() const = 0;
         /* Get the current aggregate state */
         virtual int aggr_state() const = 0;
         /* Set the environment in the initial state and returns the state */

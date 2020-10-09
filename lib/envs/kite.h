@@ -69,6 +69,24 @@ class Kite : public Environment {
 		/* Kite description */
 		virtual const std::string descr() const = 0;
 
+       /* Get the aggregate-state-space shape */
+        virtual unsigned int n_aggr_state() const = 0;
+
+        /* Get the number of actions */
+        virtual unsigned int n_actions() = 0;
+
+        /* Get the current state */
+        virtual const vecd& state() = 0;
+
+        /* Get the description of each state index */
+        virtual const vecs state_descr() const = 0;
+
+        /* Get the description of each aggregare state */
+        virtual const vecs aggr_state_descr() const = 0;
+
+        /* Get the description of each action */
+        virtual const vecs action_descr() const = 0;
+
 		/* Abstract. Get the current aggregate state */
 		virtual int aggr_state() const = 0;
 
@@ -113,6 +131,7 @@ class Kite2d : public Kite {
 		double f_aer[2];
 		double tension[2];
 		double friction;
+		vecd m_state;
 
 		// AUXILIARY FUNCTION FOR THE DYNAMICS
 		void compute_F_aer();
@@ -125,6 +144,12 @@ class Kite2d : public Kite {
 		Kite2d(const param& params, Wind2d* wind, std::mt19937& generator);
 		~Kite2d() { delete wind; }
 		virtual const std::string descr() const;
+        virtual unsigned int n_aggr_state() const { return n_alphas(); }
+        virtual unsigned int n_actions() { return 3; }
+        virtual const vecd& state() { return m_state; }
+        virtual const vecs state_descr() const;
+        virtual const vecs aggr_state_descr() const;
+        virtual const vecs action_descr() const;
 		virtual int aggr_state() const;
         virtual int reset_kite();
         virtual void impose_action(int action);
@@ -138,6 +163,9 @@ class Kite2d : public Kite {
 class Kite3d : public Kite {
 	
 	protected:
+
+		/* Height below which the kite is considered fallen */
+		const double fall_limit = 1.0;
 
 		/* Generic wind type */
 		Wind3d* wind;
@@ -153,6 +181,12 @@ class Kite3d : public Kite {
 		vecd bank; 
 
 		// DYNAMICAL VARIABLES
+		double pos_kite[3];
+		double vel_kite[3];
+		double acc_kite[3];
+		double x_block;
+		double vx_block;
+		double ax_block;
 		int bank_ind;
 		double x_diff;
 		double theta;
@@ -161,6 +195,7 @@ class Kite3d : public Kite {
 		double f_aer[3];
 		double tension[3];
 		double friction;
+		vecd m_state;
 
 		// AUXILIARY FUNCTION FOR THE DYNAMICS
 		void compute_F_aer();
@@ -173,6 +208,12 @@ class Kite3d : public Kite {
 		Kite3d(const param& params, Wind3d* wind, std::mt19937& generator);
 		~Kite3d() { delete wind; }
 		virtual const std::string descr() const;
+        virtual unsigned int n_aggr_state() const { return n_alphas() * n_banks(); }
+        virtual unsigned int n_actions() { return 9; }
+        virtual const vecd& state();
+        virtual const vecs state_descr() const;
+        virtual const vecs aggr_state_descr() const;
+        virtual const vecs action_descr() const;
 		virtual int aggr_state() const;
         virtual int reset_kite();
         virtual void impose_action(int action);
@@ -195,7 +236,9 @@ class Kite2d_vrel : public Kite2d {
 
 		Kite2d_vrel(const param& params, Wind2d* wind, std::mt19937& generator);
 		virtual const std::string descr() const;
+        virtual unsigned int n_aggr_state() const { return n_alphas() * n_betas(); }
 		virtual int aggr_state() const;
+		virtual const vecs aggr_state_descr() const;
         int n_betas() const { return beta_bins.size()-1; }
 };
 
@@ -213,6 +256,8 @@ class Kite3d_vrel : public Kite3d {
 		Kite3d_vrel(const param& params, Wind3d* wind, std::mt19937& generator);
 		virtual const std::string descr() const;
 		virtual int aggr_state() const;
+		virtual const vecs aggr_state_descr() const;
+        virtual unsigned int n_aggr_state() const { return n_alphas() * n_banks() * n_betas(); }
         int n_betas() const { return beta_bins.size()-1; }
 };
 
