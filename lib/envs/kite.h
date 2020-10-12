@@ -192,13 +192,14 @@ class Kite3d : public Kite {
 		double theta;
 		double beta;
 		double phi;
+		double va[3];
 		double f_aer[3];
 		double tension[3];
 		double friction;
 		vecd m_state;
 
 		// AUXILIARY FUNCTION FOR THE DYNAMICS
-		void compute_F_aer();
+		virtual void compute_F_aer();
 		void compute_tension_still();
 		void compute_tension_move();
 		void update_state();
@@ -259,6 +260,17 @@ class Kite3d_vrel : public Kite3d {
 		virtual const vecs aggr_state_descr() const;
         virtual unsigned int n_aggr_state() const { return n_alphas() * n_banks() * n_betas(); }
         int n_betas() const { return beta_bins.size()-1; }
+};
+
+
+/* Same as  Kite3d_vrel but with relative angle no longer on the z-x plane */
+class Kite3d_vrel2 : public Kite3d_vrel {
+	protected:
+		void compute_F_aer();
+	public:
+		Kite3d_vrel2(const param& params, Wind3d* wind, std::mt19937& generator) :
+		Kite3d_vrel{params, wind, generator} {}
+		int reset_kite();
 };
 
 

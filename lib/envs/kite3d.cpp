@@ -111,7 +111,9 @@ int Kite3d::reset_kite(){
 
     x_diff = pos_kite[0] - x_block;
     double* v_wind = (*wind).init(pos_kite[0], pos_kite[1], pos_kite[2]);
-    double va[3] = { vel_kite[0] - v_wind[0], vel_kite[1] - v_wind[1], vel_kite[2] - v_wind[2] };
+    va[0] = vel_kite[0] - v_wind[0];
+    va[1] = vel_kite[1] - v_wind[1];
+    va[2] = vel_kite[2] - v_wind[2];
     beta = atan2(va[2], va[0]);
     theta = atan2(sqrt(x_diff*x_diff + pos_kite[1]*pos_kite[1]), pos_kite[2]);
     phi = atan2(pos_kite[1], x_diff);
@@ -187,7 +189,9 @@ void Kite3d::compute_F_aer(){
     // Apparent velocity
     double* v_wind = (*wind).velocity(pos_kite[0], pos_kite[1], pos_kite[2]);
     //std::cout << pos_kite[0] << " " << v_wind[0] << " " << pos_kite[1] << " " << v_wind[1] << " " << pos_kite[2] << " " << v_wind[2] << "\n";
-    double va[3] = { vel_kite[0] - v_wind[0], vel_kite[1] - v_wind[1], vel_kite[2] - v_wind[2] };
+    va[0] = vel_kite[0] - v_wind[0];
+    va[1] = vel_kite[1] - v_wind[1];
+    va[2] = vel_kite[2] - v_wind[2];
     double va_mod = sqrt(va[0]*va[0] + va[1]*va[1] + va[2]*va[2]);
     beta = atan2(va[2], va[0]);
 
@@ -349,4 +353,17 @@ int Kite3d_vrel::aggr_state() const {
         }
     }
     return b + n_betas()*(bank_ind + n_banks()*alpha_ind);
+}
+
+
+int Kite3d_vrel2::reset_kite() {
+    Kite3d_vrel::reset_kite();
+    beta = atan2(va[2], sqrt(va[0]*va[0] + va[1]*va[1]));
+    return aggr_state();
+}
+
+
+void Kite3d_vrel2::compute_F_aer() {
+    Kite3d_vrel::compute_F_aer();
+    beta = atan2(va[2], sqrt(va[0]*va[0] + va[1]*va[1]));
 }

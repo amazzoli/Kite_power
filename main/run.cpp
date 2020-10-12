@@ -73,6 +73,11 @@ Environment* get_env(std::string env_name, const param& params, std::mt19937& ge
         Environment* env = new Kite3d_vrel(params, wind, generator);
         return env;
     }
+    if (env_name == "kite3d_turboframe2" || env_name == "kite3d_lognoise2"){
+        Wind3d* wind = get_wind3d(params, generator);
+        Environment* env = new Kite3d_vrel2(params, wind, generator);
+        return env;
+    }
     else throw std::invalid_argument( "Invalid environment name" );
 }
 

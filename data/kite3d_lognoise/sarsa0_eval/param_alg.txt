@@ -1,6 +1,0 @@
-alg_type	eval
-policy_path	../data/kite3d_lognoise/sarsa0//best_policy.txt
-ev_time	500
-n_steps	2001.0
-traj_points	2001.0
-gamma	1

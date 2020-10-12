@@ -44,7 +44,7 @@ class Wind3d {
         double m_vel[3];
 
     public:
-        virtual double* init(double x0, double y0, double z0) { return velocity(x,y,z) };
+        virtual double* init(double x0, double y0, double z0) { return velocity(x0,y0,z0); };
         virtual double* velocity(double x, double y, double z) = 0;
         virtual const std::string descr() const = 0;
 };
@@ -127,6 +127,7 @@ class Wind3d_turboframe : public Wind3d {
         int n_x, n_y, n_z;
         
         void read_grid_file(std::string path, double grid_data[][3]);
+        double* compute_velocity(double x, double y, double z);
         double interpolation(double q_d[], double vel[]);
 
     public:

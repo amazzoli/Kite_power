@@ -83,14 +83,9 @@ void Wind3d_turboframe::read_grid_file(std::string path, double grid_data[][3]){
     file.close();
 }
 
+
 double* Wind3d_turboframe::init(double x, double y, double z) {
-    return velocity(x,y,z);
-}
-
-double* Wind3d_turboframe::velocity(double x, double y, double z){
-
     //std::cout << x << " " << y << " "<< z << "\n";
-
     // Imposing the periodic boundary condition on the x
     int mx = x/x_size;
     x -= mx*x_size;
@@ -130,6 +125,74 @@ double* Wind3d_turboframe::velocity(double x, double y, double z){
         }
     }
     //std::cout << n_z << "\n";
+    return compute_velocity(x, y, z);
+}
+
+double* Wind3d_turboframe::velocity(double x, double y, double z){
+    // Imposing the periodic boundary condition on the x
+    int mx = x/x_size;
+    x -= mx*x_size;
+
+    // Translating the y such that 0 is in the middle of the canal and imposing boundary conditions
+    y += y_size / 2.0;
+    int my = y / y_size;
+    y -= my*y_size;
+
+    // Translating the z such that 0 is on the ground (we assume that z doesn't goes out of bounds)
+    // Below the ground the velocity is the one on the ground
+    z -= z_half_size;
+
+    if (!(y>=q_grid[n_y][1] && y<q_grid[n_y+1][1]))
+    {
+        if (n_y != 0 && y>=q_grid[n_y-1][1] && y<q_grid[n_y][1]) n_y -= 1; 
+        else if (n_y == 0 && y>=q_grid[n_axis_points-2][1] && y<q_grid[n_axis_points-1][1]) n_y = n_axis_points-2; 
+        else if (n_y != n_axis_points-2 && y>=q_grid[n_y+1][1] && y<q_grid[n_y+2][1]) n_y += 1; 
+        else if (n_y == n_axis_points-2 && y>=q_grid[0][1] && y<q_grid[1][1]) n_y = 0;
+        else {
+            for (size_t i = 0; i < n_axis_points-1; i++) {
+                if (y>=q_grid[i][1] && y<q_grid[i+1][1]){
+                  n_y=i;
+                  break;
+                }
+            }
+        }
+    }
+
+    if (!(x>=q_grid[n_x*n_axis_points][0] && x<q_grid[(n_x+1)*n_axis_points][0])){
+        if (n_x != 0 && x>=q_grid[(n_x-1)*n_axis_points][0] && x<q_grid[n_x*n_axis_points][0]) n_x -= 1; 
+        else if (n_x == 0 && x>=q_grid[(n_axis_points-2)*n_axis_points][0] && x<q_grid[(n_axis_points-1)*n_axis_points][0]) n_x = n_axis_points-2; 
+        else if (n_x != n_axis_points-2 && x>=q_grid[(n_x+1)*n_axis_points][0] && x<q_grid[(n_x+2)*n_axis_points][0]) n_x += 1;
+        else if (n_x == n_axis_points-2 && x>=q_grid[0][0] && x<q_grid[n_axis_points][0]) n_x = 0;
+        else {
+            for (size_t i = 0; i < n_axis_points-1; i++) {
+                if (x>=q_grid[i*n_axis_points][0] && x<q_grid[(i+1)*n_axis_points][0]){
+                  n_x=i;
+                  break;
+                }
+            }
+        }
+    }
+
+    if (!(z>=q_grid[n_z*n_axis_points*n_axis_points][2] && z<q_grid[(n_z+1)*n_axis_points*n_axis_points][2])) {
+        if (z < -z_half_size) n_z = 0;
+        else {
+            if (n_z != 0 && z>=q_grid[(n_z-1)*n_axis_points*n_axis_points][2] && z<q_grid[n_z*n_axis_points*n_axis_points][2]) n_z -= 1;
+            else if (n_z != n_axis_points-2 && z>=q_grid[(n_z+1)*n_axis_points*n_axis_points][2] && z<q_grid[(n_z+2)*n_axis_points*n_axis_points][2]) n_z += 1;
+            else {
+                for (size_t i = 0; i < n_axis_points-1; i++) {
+                    if (z>=q_grid[i*n_axis_points*n_axis_points][2] && z<q_grid[(i+1)*n_axis_points*n_axis_points][2]){
+                      n_z=i;
+                      break;
+                    }
+                }
+            }
+        }
+    }
+
+    return compute_velocity(x, y, z);
+}
+
+double* Wind3d_turboframe::compute_velocity(double x, double y, double z) {
     int ind=n_z*n_axis_points*n_axis_points+n_x*n_axis_points+n_y;
     //std::cout << x << " " << y << " "<< z << " " << n_x << " " << n_y << " "<< n_z << "\n";
 
