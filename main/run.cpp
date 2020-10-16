@@ -67,13 +67,12 @@ Environment* get_env(std::string env_name, const param& params, std::mt19937& ge
         Environment* env = new Kite3d(params, wind, generator);
         return env;
     }
-	if (env_name == "kite3d_vrel" || env_name == "kite3d_lin" || env_name == "kite3d_log" ||
-        env_name == "kite3d_lognoise" || env_name == "kite3d_turboframe"){
+	if (env_name == "kite3d_vrel" || env_name == "kite3d_lin" || env_name == "kite3d_log"){
 		Wind3d* wind = get_wind3d(params, generator);
         Environment* env = new Kite3d_vrel(params, wind, generator);
         return env;
     }
-    if (env_name == "kite3d_turboframe2" || env_name == "kite3d_lognoise2" || env_name == "kite3d_couetteframe"){
+    if (env_name == "kite3d_turboframe" || env_name == "kite3d_lognoise" || env_name == "kite3d_couetteframe"){
         Wind3d* wind = get_wind3d(params, generator);
         Environment* env = new Kite3d_vrel2(params, wind, generator);
         return env;
