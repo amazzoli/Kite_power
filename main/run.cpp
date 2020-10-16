@@ -30,7 +30,7 @@ int main(int argc, char** argv) {
     std::cout << "Environment successfully built:\n" << (*env).descr() << "\n\n";
 
     // // Constructing the algorithm
-    param alg_params = parse_param_file(data_dir + env_name + "/" + alg_name + "/param_alg.txt"); 
+    param alg_params = parse_param_file(data_dir + env_name + "/" + alg_name + "/param_alg.txt");
     RLAlgorithm* alg = get_alg(env, alg_params, generator);
     std::cout << "Algorithm successfully initialized:\n" << (*alg).descr() << "\n\n";
 
@@ -73,7 +73,7 @@ Environment* get_env(std::string env_name, const param& params, std::mt19937& ge
         Environment* env = new Kite3d_vrel(params, wind, generator);
         return env;
     }
-    if (env_name == "kite3d_turboframe2" || env_name == "kite3d_lognoise2"){
+    if (env_name == "kite3d_turboframe2" || env_name == "kite3d_lognoise2" || env_name == "kite3d_couetteframe"){
         Wind3d* wind = get_wind3d(params, generator);
         Environment* env = new Kite3d_vrel2(params, wind, generator);
         return env;
