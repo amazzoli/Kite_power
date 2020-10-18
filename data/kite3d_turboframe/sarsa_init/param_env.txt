@@ -14,5 +14,5 @@ init_bank	5
 beta_bins	-3.141592653589793,-2.6927937030769655,-2.243994752564138,-1.7951958020513104,-1.3463968515384828,-0.8975979010256552,-0.4487989505128276,0.0,0.4487989505128276,0.8975979010256552,1.3463968515384828,1.7951958020513104,2.243994752564138,2.6927937030769655,3.141592653589793,
 wind_type	turboframe
 wind_amplification	1.3
-windv_file_path	../data/kite3d_turboframe/v.txt
-windq_file_path	../data/kite3d_turboframe/q.txt
+windv_file_path	../data/kite3d_turboframe2/v.txt
+windq_file_path	../data/kite3d_turboframe2/q.txt
