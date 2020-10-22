@@ -18,6 +18,8 @@ Kite{params, generator}, wind{wind} {
     init_phi = params.d.at("init_phi");
     init_dphi = params.d.at("init_dphi");
     init_bank_ind = params.d.at("init_bank");
+
+    //debug_file.open("debug.txt");
 }
 
 
@@ -86,6 +88,8 @@ int Kite3d::aggr_state() const {
 
 /* Initial configuration given the initial theta and dtheta*/
 int Kite3d::reset_kite(){
+
+    time_sec = 0;
 
     // Initial bank angle (attack angle set in base class)
     bank_ind = init_bank_ind;
@@ -178,6 +182,8 @@ bool Kite3d::integrate_trajectory() {
     // Update positions, velocities and accelerations
     update_state();
 
+    time_sec += h;
+
     // Check if a terminal state is reached. Kite fallen
     if (pos_kite[2] <= fall_limit) return true;
     return false;
@@ -187,8 +193,8 @@ bool Kite3d::integrate_trajectory() {
 /* Compute the aerodynamical forces */
 void Kite3d::compute_F_aer(){
     // Apparent velocity
-    double* v_wind = (*wind).velocity(pos_kite[0], pos_kite[1], pos_kite[2]);
-    //std::cout << pos_kite[0] << " " << v_wind[0] << " " << pos_kite[1] << " " << v_wind[1] << " " << pos_kite[2] << " " << v_wind[2] << "\n";
+    double* v_wind = (*wind).velocity(pos_kite[0], pos_kite[1], pos_kite[2], time_sec);
+    //debug_file << pos_kite[0] << " " << v_wind[0] << " " << pos_kite[1] << " " << v_wind[1] << " " << pos_kite[2] << " " << v_wind[2] << "\n";
     va[0] = vel_kite[0] - v_wind[0];
     va[1] = vel_kite[1] - v_wind[1];
     va[2] = vel_kite[2] - v_wind[2];
@@ -322,18 +328,18 @@ double Kite3d::terminal_reward(double gamma){
 }
 
 
-Kite3d_vrel::Kite3d_vrel(const param& params, Wind3d* wind, std::mt19937& generator) :
+Kite3d_vrel_old::Kite3d_vrel_old(const param& params, Wind3d* wind, std::mt19937& generator) :
 Kite3d{params, wind, generator} {
     beta_bins = params.vecd.at("beta_bins");
 }
 
 
-const std::string Kite3d_vrel::descr() const {
+const std::string Kite3d_vrel_old::descr() const {
     return "3d kite. Attack, bank and relative-velocity angles observed. Attack and bank angles controlled. " + wind->descr();
 }
 
 
-const vecs Kite3d_vrel::aggr_state_descr() const {
+const vecs Kite3d_vrel_old::aggr_state_descr() const {
     vecs m_aggr_state_descr = vecs(0);
     for (int a=0; a<n_alphas(); a++) 
         for (int p=0; p<n_banks(); p++) 
@@ -345,7 +351,7 @@ const vecs Kite3d_vrel::aggr_state_descr() const {
 }
 
 
-int Kite3d_vrel::aggr_state() const {
+int Kite3d_vrel_old::aggr_state() const {
     int b;
     for (b=0; b<n_betas(); b++){
         if (beta >= beta_bins[b] && beta < beta_bins[b+1]){
@@ -356,14 +362,14 @@ int Kite3d_vrel::aggr_state() const {
 }
 
 
-int Kite3d_vrel2::reset_kite() {
-    Kite3d_vrel::reset_kite();
+int Kite3d_vrel::reset_kite() {
+    Kite3d_vrel_old::reset_kite();
     beta = atan2(va[2], sqrt(va[0]*va[0] + va[1]*va[1]));
     return aggr_state();
 }
 
 
-void Kite3d_vrel2::compute_F_aer() {
-    Kite3d_vrel::compute_F_aer();
+void Kite3d_vrel::compute_F_aer() {
+    Kite3d_vrel_old::compute_F_aer();
     beta = atan2(va[2], sqrt(va[0]*va[0] + va[1]*va[1]));
 }

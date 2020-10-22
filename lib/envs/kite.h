@@ -61,6 +61,9 @@ class Kite : public Environment {
 		/* Current value of the attack angle index */
 		int alpha_ind;
 
+		
+		std::ofstream debug_file;
+
 	public:
 
 		/* Constructor */
@@ -197,6 +200,7 @@ class Kite3d : public Kite {
 		double tension[3];
 		double friction;
 		vecd m_state;
+		double time_sec; 
 
 		// AUXILIARY FUNCTION FOR THE DYNAMICS
 		virtual void compute_F_aer();
@@ -245,7 +249,7 @@ class Kite2d_vrel : public Kite2d {
 
 
 /* 3d kite which controls the attack and the bank angles and observes the attack, the bank and the relative-velocity angles */
-class Kite3d_vrel : public Kite3d {
+class Kite3d_vrel_old : public Kite3d {
 	private:
 
 		/* Discretized relative velocity angles. Note, those are the boundaries of the bins.
@@ -254,7 +258,7 @@ class Kite3d_vrel : public Kite3d {
 
 	public:
 
-		Kite3d_vrel(const param& params, Wind3d* wind, std::mt19937& generator);
+		Kite3d_vrel_old(const param& params, Wind3d* wind, std::mt19937& generator);
 		virtual const std::string descr() const;
 		virtual int aggr_state() const;
 		virtual const vecs aggr_state_descr() const;
@@ -264,12 +268,12 @@ class Kite3d_vrel : public Kite3d {
 
 
 /* Same as  Kite3d_vrel but with relative angle no longer on the z-x plane */
-class Kite3d_vrel2 : public Kite3d_vrel {
+class Kite3d_vrel : public Kite3d_vrel_old {
 	protected:
 		void compute_F_aer();
 	public:
-		Kite3d_vrel2(const param& params, Wind3d* wind, std::mt19937& generator) :
-		Kite3d_vrel{params, wind, generator} {}
+		Kite3d_vrel(const param& params, Wind3d* wind, std::mt19937& generator) :
+		Kite3d_vrel_old{params, wind, generator} {}
 		int reset_kite();
 };
 

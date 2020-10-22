@@ -14,7 +14,7 @@ void RLAlgorithm::run(const param& params) {
     curr_ep_step = 1;
     Perc perc(5, n_steps-1);
 
-    // Env initialization
+    // Env initialization   
     curr_aggr_state = (*env).reset_state();
     double ret = 0;
     curr_gamma_fact = 1;
