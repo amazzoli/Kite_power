@@ -98,6 +98,9 @@ RLAlgorithm* get_alg(Environment* env, const param& params, std::mt19937& genera
     else if (alg_name == "ql"){
 		return new QL_eps(env, params, generator);
     }
+    else if (alg_name == "et"){
+		return new ET_eps(env, params, generator);
+    }
     else if (alg_name == "eval"){
 		return new Eval(env, params, generator);
     }
