@@ -17,20 +17,20 @@ int main(int argc, char** argv) {
 
     Wind3d* wind = get_wind3d(params, generator);
 
-    double q[3] = {100, 49, 30};
+    double q[3] = {1, 1, 50};
     double* v_wind;
     double dt = 0.001;
     double v=0;
     Timer timer;
-    for(int r=0; r<1000; r++) {
+    for(int r=0; r<1; r++) {
         v_wind = (*wind).init(q[0], q[1], q[2]);
 
         for (int t=0; t<10000; t++){
-        	v_wind = (*wind).velocity(q[0], q[1], q[2]);
+        	v_wind = (*wind).velocity(q[0], q[1], q[2], t*dt);
         	q[0] += v_wind[0]*dt;
         	q[1] += (v_wind[1])*dt;
         	q[2] += (v_wind[2])*dt;
-            //std::cout << q[2] << " " << v_wind[2] << " " << v_wind[2]-v << "\n";
+            std::cout << q[0] << " " << q[1] << " " << q[2] << "\n";
             v = v_wind[2];
         }
     }
