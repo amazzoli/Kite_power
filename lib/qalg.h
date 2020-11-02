@@ -84,4 +84,32 @@ class QL_eps : public QAlg_eps {
 };
 
 
+using vecpair = std::vector<std::array<int,2>>;
+
+// Eligibility traces
+class ET_eps : public QAlg_eps {
+
+    private:
+
+        double lambda;
+        vecpair sa_pairs_to_update;
+        vecd traces;
+        const double trace_th = 0.001;
+
+        int old_state;
+        int old_action;
+        double old_reward;
+
+    protected:
+
+        virtual void learning_update();
+
+    public:
+
+        ET_eps(Environment* env, const param& params, std::mt19937& generator);
+
+        virtual const std::string descr() const { return "Eligibility traces algorithm with epsilon greedy exploration."; }
+};
+
+
 #endif

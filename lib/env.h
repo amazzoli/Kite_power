@@ -24,6 +24,7 @@ class Environment {
 
         // CONSTRUCTOR
         Environment(const param& par, std::mt19937& generator) : m_generator{generator} {};
+        virtual ~Environment() {};
 
         /* Abstract. Get the description of the environment */
         virtual const std::string descr() const = 0;

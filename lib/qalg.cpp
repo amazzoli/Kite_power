@@ -170,3 +170,87 @@ void QL_eps::learning_update() {
 
     }
 }
+
+
+// ELIGIBILITY TRACES
+
+ET_eps::ET_eps(Environment* env, const param& params, std::mt19937& generator) : 
+QAlg_eps(env, params, generator) {
+
+    try {
+        lambda = params.d.at("lambda");
+    }
+    catch (std::exception)
+        { throw std::runtime_error("Eligibility traces parameters error"); }
+
+    sa_pairs_to_update = vecpair(0);
+    traces = vecd(0);
+}
+
+
+void ET_eps::learning_update() {
+
+    // Init at the beginning of the episode
+    if (curr_ep_step == 1) {
+        sa_pairs_to_update = vecpair(0);
+        traces = vecd(0);
+    }
+    else if (curr_ep_step > 1){
+
+        // Computing TD error
+        double td_error = old_reward + m_gamma * quality[curr_aggr_state][curr_action] - quality[old_state][old_action];
+
+        // Check if the new pair is in memory
+        int trace_ind = -1;
+        for (int i=0; i<sa_pairs_to_update.size(); i++){
+            if (sa_pairs_to_update[i][0] == old_state && sa_pairs_to_update[i][1] == old_action){
+                trace_ind = i;
+                break;
+            }
+        }
+
+        // Update the traces in memory
+        if (trace_ind < 0){
+            std::array<int,2> pair = {old_state, old_action};
+            sa_pairs_to_update.push_back(pair);
+            traces.push_back(1);
+        } else { traces[trace_ind] += 1; }
+
+        // Update the qualities
+        double alpha = lr(curr_step);
+        int vec_size = sa_pairs_to_update.size();
+        for (int i=0; i<vec_size; i++) {
+            int s = sa_pairs_to_update[i][0];
+            int a = sa_pairs_to_update[i][1];
+            quality[s][a] += alpha * td_error * traces[i];
+            traces[i] *= lambda * m_gamma;
+
+            // Remove traces under the threshold
+            if ( traces[i] < trace_th ) {
+                traces.erase(traces.begin()+i);
+                sa_pairs_to_update.erase(sa_pairs_to_update.begin()+i);
+                i--;
+                vec_size--;
+            }
+        }
+    }
+
+    if (curr_info.done){
+        // Update of the current state-action pair generating a new action
+        double new_q;
+        if (unif_dist(generator) < eps(curr_step)) // q from exploration
+            double new_q = quality[curr_new_aggr_state][unif_act_dist(generator)];
+        else // q from exploitation
+            double new_q = *std::max(quality[curr_new_aggr_state].begin(), quality[curr_new_aggr_state].end());
+        double td_error = curr_info.reward + m_gamma * new_q - quality[curr_aggr_state][curr_action];
+        quality[curr_aggr_state][curr_action] += lr(curr_step) * td_error;
+
+        // Terminal update for all the qualities at the terminal state
+        for (int a=0; a<quality[curr_new_aggr_state].size(); a++)
+            quality[curr_new_aggr_state][a] += lr(curr_step) * ((*env).terminal_reward(m_gamma) - quality[curr_new_aggr_state][a]);
+    }
+
+    old_state = curr_aggr_state;
+    old_action = curr_action;
+    old_reward = curr_info.reward;
+}

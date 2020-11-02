@@ -2,6 +2,7 @@
 #define UTILS_H
 
 #include <algorithm>
+#include <array>
 #include <chrono>
 #include <fstream>
 #include <functional>
