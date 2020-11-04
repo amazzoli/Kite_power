@@ -1,7 +1,7 @@
 #include "eval.h"
 
 
-Eval::Eval(Environment* env, const param& params, std::mt19937& generator): 
+Eval::Eval(Environment* env, const param& params, std::mt19937& generator):
 RLAlgorithm(env, params, generator) {
     m_policy = read_policy(params.s.at("policy_path"));
 }

@@ -17,7 +17,7 @@ int main(int argc, char** argv) {
 
     Wind3d* wind = get_wind3d(params, generator);
 
-    double q[3] = {100, 49, 30};
+    double q[3] = {1, 1, 50};
     double* v_wind;
     double dt = 0.001;
     Timer timer;
