@@ -157,7 +157,7 @@ class Wind3d_turbo : public Wind3d_turboframe {
 
         float vt_grid[n_frames][n_grid_points][3];
 
-        void read_grid_files(std::string dir, std::string name, int start_frame, float grid_data[][n_grid_points][3]);
+        void read_grid_files(std::string dir, std::string name, int start_frame);
         double* compute_velocity(double x, double y, double z, int frame);
 
     public:
@@ -166,7 +166,7 @@ class Wind3d_turbo : public Wind3d_turboframe {
         //virtual double* velocity(double x, double y, double z, double t);
 
         const std::string descr() const
-        { return "3d wind. Sequence of frames of a turbolent flow."; }
+        { return "3d wind. Sequence of frames of a turbolent flow. Max " + std::to_string(n_frames*delta_time) + " seconds."; }
 };
 
 
