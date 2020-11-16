@@ -249,21 +249,29 @@ double Wind3d_turboframe::interpolation(double q_d[], double vel[]){
 
 
 Wind3d_turbo::Wind3d_turbo(const param& params) {
-    std::string v_dir = params.s.at("windv_file_dir");
-    std::string v_name = params.s.at("windv_file_name");
-    int start_frame = params.d.at("start_frame");
-    std::string q_path = params.s.at("windq_file_path");
-    wind_amplif = params.d.at("wind_amplification");
-
+    std::string v_dir, v_name, q_path;
+    int start_frame;
+    try {
+        v_dir = params.s.at("windv_file_dir");
+        v_name = params.s.at("windv_file_name");
+        start_frame = params.d.at("start_frame");
+        q_path = params.s.at("windq_file_path");
+        wind_amplif = params.d.at("wind_amplification");
+    } catch (std::exception) 
+    { throw std::runtime_error( "Invalid parameters of turbolent wind" ); }
+    
     read_grid_file(q_path, q_grid);
-    read_grid_files(v_dir, v_name, start_frame, vt_grid);
+    read_grid_files(v_dir, v_name, start_frame);
 }
 
 
-void Wind3d_turbo::read_grid_files(std::string dir, std::string name, int start_frame, float grid_data[][n_grid_points][3]){
+void Wind3d_turbo::read_grid_files(std::string dir, std::string name, int start_frame){
+
+    Perc perc(10, n_frames);
+    std::cout << "Reading the velocities..\n";
 
     for (int t=0; t<n_frames; t++) {
-        std::cout << t <<"\n";
+        perc.step(t);
         std::string path = dir + name + std::to_string(t+start_frame) + ".txt";
         std::ifstream file (path);
         if (!file.is_open())
@@ -274,9 +282,9 @@ void Wind3d_turbo::read_grid_files(std::string dir, std::string name, int start_
         int count = 0;
         while ( getline (file, line) ){
             l = str2vecd(line, " ", false);
-            grid_data[t][count][0] = l[0];
-            grid_data[t][count][1] = l[2];
-            grid_data[t][count][2] = l[1];
+            vt_grid[t][count][0] = l[0];
+            vt_grid[t][count][1] = l[2];
+            vt_grid[t][count][2] = l[1];
             count++;
         }
         file.close();

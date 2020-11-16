@@ -1,0 +1,15 @@
+alg_type	et
+gamma	1.0
+lambda	0.9
+n_steps	20000000
+traj_points	1
+traj_states	1218,1219,1220,1221,1222,1223,1224,1225,1226,1227,1228,1229,1230,1231,
+init_quals	4000
+lr0	0.05
+lrc	10000.0
+lr_expn	0.8
+lr_burn	20000000
+eps0	0.0001
+epsc	10000.0
+eps_expn	0.8
+eps_burn	10000000.0

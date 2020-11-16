@@ -20,21 +20,20 @@ int main(int argc, char** argv) {
     double q[3] = {1, 1, 50};
     double* v_wind;
     double dt = 0.001;
-    double v=0;
     Timer timer;
-    for(int r=0; r<1; r++) {
-        v_wind = (*wind).init(q[0], q[1], q[2]);
+    vec2d traj = vec2d(0);
+    //for(int r=0; r<1000; r++) {
+    v_wind = (*wind).init(q[0], q[1], q[2]);
 
-        for (int t=0; t<10000; t++){
-        	v_wind = (*wind).velocity(q[0], q[1], q[2], t*dt);
-        	q[0] += v_wind[0]*dt;
-        	q[1] += (v_wind[1])*dt;
-        	q[2] += (v_wind[2])*dt;
-            std::cout << q[0] << " " << q[1] << " " << q[2] << "\n";
-            v = v_wind[2];
-        }
+    for (int t=0; t<100000; t++){
+        v_wind = (*wind).velocity(q[0], q[1], q[2], t*dt);
+        q[0] += v_wind[0]*dt;
+        q[1] += (v_wind[1])*dt;
+        q[2] += (v_wind[2])*dt;
+        //traj.push_back({q[0], q[1], q[2]});
     }
-    //std::cout << timer.elapsed() << "\n";
+    //}
+    std::cout << timer.elapsed() << "\n";
 
 
     return 0;
