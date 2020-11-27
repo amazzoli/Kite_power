@@ -1,0 +1,15 @@
+alg_type	et
+lambda	0.9
+gamma	1.0
+n_steps	100000000
+traj_points	1000
+traj_states	0,
+lr0	0.001
+lrc	125000.0
+lr_expn	0.8
+lr_burn	100000000
+eps0	0.0001
+epsc	2500000.0
+eps_expn	1
+eps_burn	50000000.0
+init_q_path	../data/kite3d_turbo/et0/best_quality.txt
