@@ -13,8 +13,6 @@ class QAlg_eps : public RLAlgorithm {
 
         /* Quality function */
         vec2d quality;
-        /* Quality function trajectory */
-        vec3d quality_traj;
         /* Which aggregate states are stored in the trajectory (to save space) */
         veci traj_states;
         /* Learning rate scheduling */
@@ -25,6 +23,19 @@ class QAlg_eps : public RLAlgorithm {
         std::uniform_real_distribution<double> unif_dist;
         /* Uniform distribution over the actions */
         std::uniform_int_distribution<int> unif_act_dist;
+
+        // TRAJECTROIES TO BUILD
+        int t_time;
+        /* Quality function trajectory */
+        vec3d quality_traj;
+        /* Episode at which traj is computed */
+        veci ep_traj;
+        /* Learning rate traj */
+        vecd lr_traj;
+        /* Exploration traj */
+        vecd eps_traj;
+        /* Environment information traj */
+        vec2d env_info_traj;
 
         // OVERRIDED FUNCTIONS
         virtual void init(const param& params);

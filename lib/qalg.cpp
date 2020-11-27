@@ -39,12 +39,22 @@ RLAlgorithm(env, params, generator) {
 
 void QAlg_eps::init(const param& params) {
 
-    if (params.s.find("init_q_path") == params.s.end())
+    if (params.s.find("init_q_path") == params.s.end()) {
+        std::cout << "Starting from flat initial conditions equal to " << params.d.at("init_quals") << "\n";
         quality = const_quals(params.d.at("init_quals"));
-    else
+    }
+    else {
+        std::cout << "Starting from initial conditions at " << params.s.at("init_q_path") << "\n";
         quality = read_quality(params.s.at("init_q_path"));
+    }
 
-    quality_traj = vec3d(0);
+    // Trajectory init
+    t_time = 0;
+    quality_traj = vec3d(params.d.at("traj_points"), vec2d(0));
+    ep_traj = veci(params.d.at("traj_points"), 0);
+    lr_traj = vecd(params.d.at("traj_points"), 0);
+    eps_traj = vecd(params.d.at("traj_points"), 0);
+    env_info_traj = vec2d(params.d.at("traj_points"), vecd(0));
 }
 
 
@@ -65,21 +75,30 @@ int QAlg_eps::get_action() {
 
 
 void QAlg_eps::build_traj() {
+    // Quality trajectory
     vec2d q = vec2d(0);
     for (int k : traj_states)
         q.push_back(quality[k]);
-    quality_traj.push_back(q);
+    quality_traj[t_time] = q;
+
+    // Info trajectory
+    ep_traj[t_time] = curr_episode;
+    lr_traj[t_time] = lr(curr_step);
+    eps_traj[t_time] = eps(curr_step);
+    env_info_traj[t_time] = (*env).env_data();
+
+    t_time++;
 }
 
 
 void QAlg_eps::print_traj(std::string out_dir) const {
 
-    std::cout << out_dir << "\n";
-    
     // PRINTING THE TRAJECTOIES
-    std::ofstream out_q, out_p;
+    std::ofstream out_q, out_p, out_i;
     out_q.open(out_dir + "quality_traj.txt");
-    // Headers
+    out_i.open(out_dir + "info_traj.txt");
+    
+    // Headers Q
     for (int k : traj_states)
         out_q << (*env).aggr_state_descr()[k] << "\t";
     out_q << "\n";
@@ -88,8 +107,17 @@ void QAlg_eps::print_traj(std::string out_dir) const {
         if (a < quality_traj[0][0].size()-1) out_q << ",";
     }
     out_q << "\n";
+    // Headers info
+    out_i << "Episode\tLearn_rate\tEpsilon\t";
+    for (std::string h : (*env).env_data_headers())
+        out_i << h << "\t";
+    out_i << "\n";
+
     // Body
     for (int t=0; t<quality_traj.size(); t++){
+        out_i << ep_traj[t] << "\t" << lr_traj[t] << "\t" << eps_traj[t] << "\t";
+        for (int k=0; k<(*env).env_data_headers().size(); k++) 
+            out_i << env_info_traj[t][k] << "\t";
         for (int k=0; k<quality_traj[t].size(); k++){
             for (int a=0; a<quality_traj[t][k].size(); a++){
                 out_q << quality_traj[t][k][a];
@@ -98,9 +126,11 @@ void QAlg_eps::print_traj(std::string out_dir) const {
             out_q << "\t";
         }
         out_q << "\n";
+        out_i << "\n";
     }
     out_q.close();
-
+    out_i.close();
+    
     // PRINTING THE BEST VALUES AND THE BEST POLICIES
     out_p.open(out_dir + "best_policy.txt");
     out_q.open(out_dir + "best_quality.txt");
@@ -119,6 +149,8 @@ void QAlg_eps::print_traj(std::string out_dir) const {
         out_q << quality[k][policy.size()-1] << "\n";
         out_p << "\n";
     }
+    out_q.close();
+    out_p.close();
 }
 
 

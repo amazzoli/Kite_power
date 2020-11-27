@@ -14,6 +14,7 @@ Kite::Kite(const param& params, std::mt19937& generator) : Environment{params, g
 	alphas = params.vecd.at("alphas");
 	CL_alpha = params.vecd.at("CL_alphas");
 	CD_alpha = params.vecd.at("CD_alphas");
+	fallen_times = 0;
 }
 
 
@@ -35,11 +36,26 @@ env_info Kite::step(int action) {
 	bool done = false;
 	for (t=0; t<steps_btw_train; t++){
 		// Check the episode end or a terminal state reached
-		if (curr_ep_step >= ep_length || integrate_trajectory()){
+		if (integrate_trajectory()) {
+			fallen_times++;
+			done = true;
+			break;
+		}
+		if (curr_ep_step >= ep_length){
 			done = true;
 			break;
 		}
 		curr_ep_step++;
 	}
 	return env_info {get_rew(t), done};
+}
+
+vecd Kite::env_data() {
+	vecd data = vecd { (double)fallen_times };
+	fallen_times = 0;
+	return data;
+}
+
+vecs Kite::env_data_headers() {
+	return vecs { "Fallen_times" };;
 }

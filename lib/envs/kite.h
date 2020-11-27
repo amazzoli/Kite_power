@@ -23,6 +23,8 @@ class Kite : public Environment {
 		/* Number of consecutive steps between training */
 		int steps_btw_train;
 
+		int fallen_times;
+
 	protected:
 
 		// FIXED CONSTANTS
@@ -115,6 +117,9 @@ class Kite : public Environment {
 
 		/* Number of attack angles */ 
         int n_alphas() const { return alphas.size(); }
+
+        virtual vecd env_data();
+        virtual vecs env_data_headers();
 };
 
 

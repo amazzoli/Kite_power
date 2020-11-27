@@ -12,7 +12,10 @@ void RLAlgorithm::run(const param& params) {
     int traj_step = round(n_steps/float(traj_points));
     curr_episode = 1;
     curr_ep_step = 1;
-    Perc perc(5, n_steps-1);
+    int perc_step = 5;
+    Perc perc(perc_step, n_steps-1);
+    double av_ret = 0;
+    int ep_for_av_ret = 1;
 
     // Env initialization   
     curr_aggr_state = (*env).reset_state();
@@ -24,7 +27,6 @@ void RLAlgorithm::run(const param& params) {
 
     // Main loop
     for (curr_step=0; curr_step<n_steps; ++curr_step){
-        perc.step(curr_step);
 
         // Algorithm-specific action at the current step
         curr_action = get_action();
@@ -33,12 +35,6 @@ void RLAlgorithm::run(const param& params) {
         curr_info = (*env).step(curr_action);
         ret += curr_info.reward * curr_gamma_fact;
         curr_new_aggr_state = (*env).aggr_state();
-
-        //std::cout << curr_aggr_state << " " << curr_action << " " << curr_new_aggr_state << " " << curr_info.reward << " " << curr_info.done << "\n";
-        // vecd state = (*env).state();
-        // for (const double& s : state)
-        //     std::cout << s << " ";
-        //std::cout << "\n\n";
 
         // Algorithm-specific update
         learning_update();
@@ -50,6 +46,8 @@ void RLAlgorithm::run(const param& params) {
         if (curr_info.done){ 
             ret += (*env).terminal_reward(m_gamma) * curr_gamma_fact;
             return_traj.push_back(ret);
+            av_ret += ret;
+            ep_for_av_ret++;
             ret = 0;
             ep_len_traj.push_back(curr_ep_step);
             curr_ep_step = 1;
@@ -62,6 +60,13 @@ void RLAlgorithm::run(const param& params) {
             curr_aggr_state = curr_new_aggr_state;
             curr_gamma_fact *= m_gamma;
             curr_ep_step++;
+        }
+
+        if (perc.step(curr_step)) {
+            if (ep_for_av_ret != 0)
+                std:: cout << " average return over " << ep_for_av_ret << " ep: " << av_ret / (float)ep_for_av_ret;
+            ep_for_av_ret = 0;
+            av_ret = 0;
         }
     }
 }

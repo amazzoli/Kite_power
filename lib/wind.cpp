@@ -281,11 +281,11 @@ void Wind3d_turbo::read_grid_files(std::string dir, std::string name, int start_
         vecd l = vecd(3);
         int count = 0;
         while ( getline (file, line) ){
-            l = str2vecd(line, " ", false);
-            vt_grid[t][count][0] = l[0];
-            vt_grid[t][count][1] = l[2];
-            vt_grid[t][count][2] = l[1];
-            count++;
+           l = str2vecd(line, " ", false);
+           vt_grid[t][count][0] = l[0];
+           vt_grid[t][count][1] = l[2];
+           vt_grid[t][count][2] = l[1];
+           count++;
         }
         file.close();
     }

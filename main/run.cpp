@@ -38,11 +38,11 @@ int main(int argc, char** argv) {
     Timer timer;
     std::cout << "Algorithm started\n";
     (*alg).run(alg_params);
-    std::cout << "Algorithm completed in " << timer.elapsed() << " seconds\n";
+    std::cout << "\nAlgorithm completed in " << timer.elapsed() << " seconds\n";
 
     // Printing the trajectories
     (*alg).print_output(data_dir + env_name + "/" + alg_name + "/");
-    std::cout << "Trajectories successfully printed\n";
+    std::cout << "Trajectories successfully printed at " << data_dir + env_name + "/" + alg_name + "/" << "\n";
 
     delete env;
     delete alg;

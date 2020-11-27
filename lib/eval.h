@@ -11,11 +11,17 @@ class Eval : public RLAlgorithm {
     private:
 
         /* Policy to evaluate */
-        vec2d m_policy;
+        vec2d m_quality;
         /* Trajectory of all the states */
         vec2d m_state_traj;
         /* Aggregate states trajectory */
         veci m_aggr_st_traj;
+        /* Uniform random distribution */ 
+        std::uniform_real_distribution<double> unif_dist;
+        /* Uniform distribution over the actions */
+        std::uniform_int_distribution<int> unif_act_dist;
+        /* Epsilon greedy exploration. 0 if not specified */
+        double eps;
 
         virtual void init(const param& params);
         virtual int get_action();
