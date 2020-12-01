@@ -9,7 +9,7 @@ lr0	0.005
 lrc	100000.0
 lr_expn	0.8
 lr_burn	100000000.0
-eps0	0.001
+eps0	0.002
 epsc	100000.0
 eps_expn	0.8
 eps_burn	150000000.0

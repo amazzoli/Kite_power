@@ -14,7 +14,7 @@ void RLAlgorithm::run(const param& params) {
     curr_ep_step = 1;
     Perc perc(5, n_steps-1);
 
-    // Env initialization   
+    // Env initialization
     curr_aggr_state = (*env).reset_state();
     double ret = 0;
     curr_gamma_fact = 1;
@@ -47,7 +47,7 @@ void RLAlgorithm::run(const param& params) {
         if (traj_step > 0 && curr_step%traj_step == 0) build_traj();
 
         // At terminal state
-        if (curr_info.done){ 
+        if (curr_info.done){
             ret += (*env).terminal_reward(m_gamma) * curr_gamma_fact;
             return_traj.push_back(ret);
             ret = 0;
@@ -56,9 +56,9 @@ void RLAlgorithm::run(const param& params) {
             curr_aggr_state = (*env).reset_state();
             curr_gamma_fact = 1;
             curr_episode++;
-        } 
+        }
         // At non-terminal state
-        else { 
+        else {
             curr_aggr_state = curr_new_aggr_state;
             curr_gamma_fact *= m_gamma;
             curr_ep_step++;
@@ -81,5 +81,3 @@ void RLAlgorithm::print_output(std::string dir) const {
     // Printing the algorithm-specific trajectories
     print_traj(dir);
 }
-
-

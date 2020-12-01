@@ -18,7 +18,8 @@ int main(int argc, char** argv) {
         throw std::runtime_error("Two strings must be passed during execution: environment name and run name");
 
     // Init random generator
-    unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
+    //unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
+    unsigned seed = 1234;
     std::mt19937 generator(seed);
 
     // Importing the parameters file

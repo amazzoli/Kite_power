@@ -21,9 +21,9 @@ int Kite::reset_state(){
     // Initial attack angle
     if (init_alpha_ind >= n_alphas())
         alpha_ind = std::uniform_int_distribution<int>(0, n_alphas()-1)(m_generator);
-    else 
+    else
         alpha_ind = init_alpha_ind;
-	
+
 	curr_ep_step = 0;
 	return reset_kite();
 }

@@ -5,7 +5,7 @@
 
 
 /* Constructor */
-Kite3d::Kite3d(const param& params, Wind3d* wind, std::mt19937& generator) : 
+Kite3d::Kite3d(const param& params, Wind3d* wind, std::mt19937& generator) :
 Kite{params, generator}, wind{wind} {
 
     m_state = vecd(state_descr().size());
@@ -36,18 +36,18 @@ const vecs Kite3d::state_descr() const {
         "kite_vel_x",   // 3
         "kite_vel_y",   // 4
         "kite_vel_z",   // 5
-        "kite_acc_x",   // 6 
+        "kite_acc_x",   // 6
         "kite_acc_y",   // 7
         "kite_acc_z",   // 8
         "block_pos_x",  // 9
         "block_vel_x",  // 10
-        "block_acc_x",  // 11 
+        "block_acc_x",  // 11
     };
     return m_state_descr;
 }
 
 
-const vecd& Kite3d::state() { 
+const vecd& Kite3d::state() {
     m_state[0] = pos_kite[0];
     m_state[1] = pos_kite[1];
     m_state[2] = pos_kite[2];
@@ -60,14 +60,14 @@ const vecd& Kite3d::state() {
     m_state[9] = x_block;
     m_state[10] = vx_block;
     m_state[11] = ax_block;
-    return m_state; 
+    return m_state;
 }
 
 
 const vecs Kite3d::aggr_state_descr() const {
     vecs m_aggr_state_descr = vecs(0);
-    for (int a=0; a<n_alphas(); a++) 
-        for (int b=0; b<n_banks(); b++) 
+    for (int a=0; a<n_alphas(); a++)
+        for (int b=0; b<n_banks(); b++)
             m_aggr_state_descr.push_back("attack_ang_"+std::to_string(alphas[a])+",bank_angle_"+std::to_string(bank[b]));
     return m_aggr_state_descr;
 }
@@ -95,12 +95,15 @@ int Kite3d::reset_kite(){
     bank_ind = init_bank_ind;
 
     // Block position, velocity, acceleration
-    x_block = 0;
+    x_block = std::uniform_real_distribution<double>(0.0,100)(m_generator);
+    //x_block = 0;
+    y_block = std::uniform_real_distribution<double>(-40,40)(m_generator);
+    //y_block = 40;
     vx_block = 0;
     ax_block = 0;
     // Kite position
     pos_kite[0] = x_block + R*sin(init_theta)*cos(init_phi);
-    pos_kite[1] = R*sin(init_theta)*sin(init_phi);
+    pos_kite[1] = y_block + R*sin(init_theta)*sin(init_phi);
     pos_kite[2] = R*cos(init_theta);
     // Kite velocity
     vel_kite[0] = vx_block + R*cos(init_theta)*cos(init_phi)*init_dtheta - R*sin(init_theta)*sin(init_phi)*init_dphi;
@@ -114,13 +117,14 @@ int Kite3d::reset_kite(){
     acc_kite[2] = -R*cos(init_theta)*init_dtheta*init_dtheta;
 
     x_diff = pos_kite[0] - x_block;
+    y_diff = pos_kite[1] - y_block;
     double* v_wind = (*wind).init(pos_kite[0], pos_kite[1], pos_kite[2]);
     va[0] = vel_kite[0] - v_wind[0];
     va[1] = vel_kite[1] - v_wind[1];
     va[2] = vel_kite[2] - v_wind[2];
     beta = atan2(va[2], va[0]);
-    theta = atan2(sqrt(x_diff*x_diff + pos_kite[1]*pos_kite[1]), pos_kite[2]);
-    phi = atan2(pos_kite[1], x_diff);
+    theta = atan2(sqrt(x_diff*x_diff + y_diff*y_diff), pos_kite[2]);
+    phi = atan2(y_diff, x_diff);
 
     return aggr_state();
 }
@@ -167,8 +171,9 @@ void Kite3d::impose_action(int a){
 bool Kite3d::integrate_trajectory() {
 
     x_diff = pos_kite[0] - x_block;
-    theta = atan2(sqrt(x_diff*x_diff + pos_kite[1]*pos_kite[1]), pos_kite[2]);
-    phi = atan2(pos_kite[1], x_diff);
+    y_diff = pos_kite[1] - y_block;
+    theta = atan2(sqrt(x_diff*x_diff + y_diff*y_diff), pos_kite[2]);
+    phi = atan2(y_diff, x_diff);
 
     // Aerodynamical forces
     compute_F_aer();
@@ -201,8 +206,8 @@ void Kite3d::compute_F_aer(){
     double va_mod = sqrt(va[0]*va[0] + va[1]*va[1] + va[2]*va[2]);
     beta = atan2(va[2], va[0]);
 
-    double t1[3] = {sin(theta)*cos(phi), sin(theta)*sin(phi), cos(theta)}; 
-    if (pos_kite[1] == 0) t1[1] = 0; // Errore in approx quando phi=pi-greco
+    double t1[3] = {sin(theta)*cos(phi), sin(theta)*sin(phi), cos(theta)};
+    if (pos_kite[1] == y_block) t1[1] = 0; // Errore in approx quando phi=pi-greco
     double t2[3] = {t1[1]*va[2] - t1[2]*va[1], t1[2]*va[0] - t1[0]*va[2], t1[0]*va[1] - t1[1]*va[0]};
     double t2_mod = sqrt(t2[0]*t2[0] + t2[1]*t2[1] + t2[2]*t2[2]);
     t2[0] /= t2_mod; t2[1] /= t2_mod; t2[2] /= t2_mod;
@@ -229,8 +234,8 @@ void Kite3d::compute_F_aer(){
 void Kite3d::compute_tension_still(){
 
     double vx_diff = vel_kite[0] - vx_block;
-    double aux_A = (f_aer[0]*x_diff + f_aer[1]*pos_kite[1] + f_aer[2]*pos_kite[2])/m_kite + (vx_diff*vx_diff + vel_kite[1]*vel_kite[1] + vel_kite[2]*vel_kite[2]);
-    double aux_B = coef_friction*(cos(phi)*x_diff + sin(phi)*pos_kite[1]);
+    double aux_A = (f_aer[0]*x_diff + f_aer[1]*y_diff + f_aer[2]*pos_kite[2])/m_kite + (vx_diff*vx_diff + vel_kite[1]*vel_kite[1] + vel_kite[2]*vel_kite[2]);
+    double aux_B = coef_friction*(cos(phi)*x_diff + sin(phi)*y_diff);
     double aux_C = R*(m_kite + m_block)/(m_kite*m_block);
     // |Mg| > |Tz|
     double T1 = (aux_A - g*(pos_kite[2] - aux_B)) / (aux_C - cos(theta)/m_block*(pos_kite[2] - aux_B));
@@ -250,12 +255,12 @@ void Kite3d::compute_tension_still(){
 
     // If the computed tension is less than friction force: F_friction = -Tension[0]
     if ( fabs(tension[0]) < fabs(friction) ){
-        double T = (aux_A - g*pos_kite[2]) / (aux_C - sin(theta)/m_block*(cos(phi)*x_diff + sin(phi)*pos_kite[1]) - cos(theta)/m_block*pos_kite[2]);
+        double T = (aux_A - g*pos_kite[2]) / (aux_C - sin(theta)/m_block*(cos(phi)*x_diff + sin(phi)*y_diff) - cos(theta)/m_block*pos_kite[2]);
         tension[0] = T * sin(theta)*cos(phi);
         tension[1] = T * sin(theta)*sin(phi);
         tension[2] = T * cos(theta);
         friction = -tension[0];
-    }   
+    }
 }
 
 
@@ -263,7 +268,7 @@ void Kite3d::compute_tension_still(){
 void Kite3d::compute_tension_move(){
 
     double vx_diff = vel_kite[0] - vx_block;
-    double aux_A = (f_aer[0]*x_diff + f_aer[1]*pos_kite[1] + f_aer[2]*pos_kite[2])/m_kite + (vx_diff*vx_diff + vel_kite[1]*vel_kite[1] + vel_kite[2]*vel_kite[2]);
+    double aux_A = (f_aer[0]*x_diff + f_aer[1]*y_diff + f_aer[2]*pos_kite[2])/m_kite + (vx_diff*vx_diff + vel_kite[1]*vel_kite[1] + vel_kite[2]*vel_kite[2]);
     double aux_B = coef_friction/fabs(vx_block)*x_diff*vx_block;
     double aux_C = R*(m_kite + m_block)/(m_kite*m_block);
     // |Mg| > |Tz|
@@ -307,9 +312,9 @@ void Kite3d::update_state(){
     pos_kite[2] = pos_kite[2] + h*vel_kite[2];
 
     // imposing the rigid thread constraint
-    double r_diff_modulo = sqrt(x_diff*x_diff + pos_kite[1]*pos_kite[1] + pos_kite[2]*pos_kite[2]);
+    double r_diff_modulo = sqrt(x_diff*x_diff + y_diff*y_diff + pos_kite[2]*pos_kite[2]);
     pos_kite[0] = x_block + (pos_kite[0] - x_block)/r_diff_modulo*R;
-    pos_kite[1] = pos_kite[1]/r_diff_modulo*R;
+    pos_kite[1] = y_block + (pos_kite[1] - y_block)/r_diff_modulo*R;
     pos_kite[2] = pos_kite[2]/r_diff_modulo*R;
     //std::cout << pos_kite[0] << " " << pos_kite[1] << " " << acc_kite[0] << " " << acc_kite[1] << " " << alpha_ind << "\n";
 }
@@ -341,8 +346,8 @@ const std::string Kite3d_vrel_old::descr() const {
 
 const vecs Kite3d_vrel_old::aggr_state_descr() const {
     vecs m_aggr_state_descr = vecs(0);
-    for (int a=0; a<n_alphas(); a++) 
-        for (int p=0; p<n_banks(); p++) 
+    for (int a=0; a<n_alphas(); a++)
+        for (int p=0; p<n_banks(); p++)
             for (int b=0; b<n_betas(); b++){
                 double beta = (beta_bins[b+1] + beta_bins[b]) / 2.0;
                 m_aggr_state_descr.push_back("attack_ang_"+std::to_string(alphas[a])+",bank_angle_"+std::to_string(bank[p])+",vrel_angle_"+std::to_string(beta));

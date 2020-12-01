@@ -40,7 +40,7 @@ class Kite : public Environment {
 		const double fall_penalty = 1000;
 		/* Zero threshold for the velocity */
 		const double v_threshold = 10E-8;
-		
+
 		// SET BY CONSTRUCTOR
 		/* Initial angle of the block-kite with the ground */
 		double init_theta;
@@ -61,7 +61,7 @@ class Kite : public Environment {
 		/* Current value of the attack angle index */
 		int alpha_ind;
 
-		
+
 		std::ofstream debug_file;
 
 	public:
@@ -99,12 +99,12 @@ class Kite : public Environment {
 		/* Abstract. Set the specific kite in the initial state */
         virtual int reset_kite() = 0;
 
-        /* Step is called before every learning update. It first imposes the action though the env-specific abstract 
-		   method "impose_action(int action)". Then it integrates the trajectory for "steps_btw_train" times calling 
+        /* Step is called before every learning update. It first imposes the action though the env-specific abstract
+		   method "impose_action(int action)". Then it integrates the trajectory for "steps_btw_train" times calling
 		   "integrate_trajectory()". At the end it retruns the env_info with "get_rew_and_done()" */
         virtual env_info step(int action);
 
-        /* Abstract. Change the internal state as a consequence of the action */ 
+        /* Abstract. Change the internal state as a consequence of the action */
         virtual void impose_action(int action) = 0;
 
         /* Abstract. One temporal step of the internal dynamics */
@@ -113,14 +113,14 @@ class Kite : public Environment {
         /* Abstract. Get the reward given the internal state */
         virtual double get_rew(int steps_from_training) = 0;
 
-		/* Number of attack angles */ 
+		/* Number of attack angles */
         int n_alphas() const { return alphas.size(); }
 };
 
 
 /* 2d kite which observes and controls the attack angles */
 class Kite2d : public Kite {
-	
+
 	protected:
 
 		/* Generic wind type */
@@ -164,7 +164,7 @@ class Kite2d : public Kite {
 
 /* 3d kite which observes and controls the attack and the bank angles */
 class Kite3d : public Kite {
-	
+
 	protected:
 
 		/* Height below which the kite is considered fallen */
@@ -181,17 +181,19 @@ class Kite3d : public Kite {
 		/* Initial index of the bank angle */
 		int init_bank_ind;
 		/* Bank angles discretizations */
-		vecd bank; 
+		vecd bank;
 
 		// DYNAMICAL VARIABLES
 		double pos_kite[3];
 		double vel_kite[3];
 		double acc_kite[3];
 		double x_block;
+		double y_block;
 		double vx_block;
 		double ax_block;
 		int bank_ind;
 		double x_diff;
+		double y_diff;
 		double theta;
 		double beta;
 		double phi;
@@ -200,7 +202,7 @@ class Kite3d : public Kite {
 		double tension[3];
 		double friction;
 		vecd m_state;
-		double time_sec; 
+		double time_sec;
 
 		// AUXILIARY FUNCTION FOR THE DYNAMICS
 		virtual void compute_F_aer();

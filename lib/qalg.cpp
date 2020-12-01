@@ -7,15 +7,15 @@ QAlg_eps::QAlg_eps(Environment* env, const param& params, std::mt19937& generato
 RLAlgorithm(env, params, generator) {
 
     // Learning rate scheduling
-    lr = d_i_fnc{  
-        [&params](int step) { 
+    lr = d_i_fnc{
+        [&params](int step) {
             return plaw_dacay(step, params.d.at("lr_burn"), params.d.at("lr_expn"), params.d.at("lr0"), params.d.at("lrc"));
         }
     };
 
     // Exploration scheduling
-    eps = d_i_fnc{  
-        [&params](int step) { 
+    eps = d_i_fnc{
+        [&params](int step) {
             return plaw_dacay(step, params.d.at("eps_burn"), params.d.at("eps_expn"), params.d.at("eps0"), params.d.at("epsc"));
         }
     };
@@ -75,7 +75,7 @@ void QAlg_eps::build_traj() {
 void QAlg_eps::print_traj(std::string out_dir) const {
 
     std::cout << out_dir << "\n";
-    
+
     // PRINTING THE TRAJECTOIES
     std::ofstream out_q, out_p;
     out_q.open(out_dir + "quality_traj.txt");
@@ -176,7 +176,7 @@ void QL_eps::learning_update() {
 
 // ELIGIBILITY TRACES
 
-ET_eps::ET_eps(Environment* env, const param& params, std::mt19937& generator) : 
+ET_eps::ET_eps(Environment* env, const param& params, std::mt19937& generator) :
 QAlg_eps(env, params, generator) {
 
     try {
@@ -256,4 +256,3 @@ void ET_eps::learning_update() {
     old_action = curr_action;
     old_reward = curr_info.reward;
 }
-

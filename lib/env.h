@@ -17,7 +17,7 @@ class Environment {
 
     protected:
 
-        /* Random number generator */ 
+        /* Random number generator */
         std::mt19937 m_generator;
 
     public:
@@ -44,7 +44,7 @@ class Environment {
         virtual int aggr_state() const = 0;
         /* Set the environment in the initial state and returns the state */
         virtual int reset_state() = 0;
-        /* Environmental transition given the action which modifies the 
+        /* Environmental transition given the action which modifies the
            internal state and return the reward and the termination flag. */
         virtual env_info step(int action) = 0;
         /* Reward ot penalty in the terminal state, zero by default */
