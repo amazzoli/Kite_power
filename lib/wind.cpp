@@ -268,7 +268,7 @@ Wind3d_turbo::Wind3d_turbo(const param& params) {
 void Wind3d_turbo::read_grid_files(std::string dir, std::string name, int start_frame){
 
     Perc perc(10, n_frames);
-    std::cout << "Reading the velocities..\n";
+    std::cout << "Reading the velocities..";
 
     for (int t=0; t<n_frames; t++) {
         perc.step(t);
@@ -289,6 +289,7 @@ void Wind3d_turbo::read_grid_files(std::string dir, std::string name, int start_
         }
         file.close();
     }
+    std::cout << "\n";
 }
 
 

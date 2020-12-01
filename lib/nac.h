@@ -53,7 +53,7 @@ class AC : public RLAlgorithm {
 
         // METHODS TO OVERRIDE
         virtual void init(const param& params);
-        virtual int get_action();
+        virtual int get_action(bool eval);
         virtual void learning_update();
         virtual void build_traj();
         virtual void print_traj(std::string out_dir) const;

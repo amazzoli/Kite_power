@@ -50,24 +50,23 @@ void QAlg_eps::init(const param& params) {
 
     // Trajectory init
     t_time = 0;
-    quality_traj = vec3d(params.d.at("traj_points"), vec2d(0));
-    ep_traj = veci(params.d.at("traj_points"), 0);
-    lr_traj = vecd(params.d.at("traj_points"), 0);
-    eps_traj = vecd(params.d.at("traj_points"), 0);
-    env_info_traj = vec2d(params.d.at("traj_points"), vecd(0));
+    quality_traj = vec3d(params.d.at("traj_points")+1, vec2d(0));
+    ep_traj = veci(params.d.at("traj_points")+1, 0);
+    lr_traj = vecd(params.d.at("traj_points")+1, 0);
+    eps_traj = vecd(params.d.at("traj_points")+1, 0);
+    env_info_traj = vec2d(params.d.at("traj_points")+1, vecd(0));
 }
 
 
-int QAlg_eps::get_action() {
+int QAlg_eps::get_action(bool eval) {
 
-    double u = unif_dist(generator);
     int action;
-    if (u < eps(curr_step)){
-        action = unif_act_dist(generator);
+    if (eval || unif_dist(generator) > eps(curr_step)){
+        auto max_elem = std::max_element(quality[curr_aggr_state].begin(), quality[curr_aggr_state].end());
+        action = std::distance(quality[curr_aggr_state].begin(), max_elem);        
     }
     else {
-        auto max_elem = std::max_element(quality[curr_aggr_state].begin(), quality[curr_aggr_state].end());
-        action = std::distance(quality[curr_aggr_state].begin(), max_elem);
+        action = unif_act_dist(generator);
     }
 
     return action;

@@ -19,7 +19,7 @@ void Eval::init(const param& params){
 }
 
 
-int Eval::get_action() {
+int Eval::get_action(bool eval) {
     double u = unif_dist(generator);
     int action;
     if (u < eps){
@@ -53,6 +53,7 @@ void Eval::print_traj(std::string dir) const {
             file_s << m_state_traj[t][k] << "\t";
         file_s << "\n";
     }
+    file_s.close();
 
     std::ofstream file_as;
     file_as.open(dir + "/ev_aggr_st.txt");
@@ -60,4 +61,5 @@ void Eval::print_traj(std::string dir) const {
     for (int t=0; t<m_aggr_st_traj.size(); t++){
         file_as << m_aggr_st_traj[t] << "\t" << (*env).aggr_state_descr()[m_aggr_st_traj[t]] << "\n";
     }
+    file_as.close();
 }

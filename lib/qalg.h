@@ -38,10 +38,11 @@ class QAlg_eps : public RLAlgorithm {
         vec2d env_info_traj;
 
         // OVERRIDED FUNCTIONS
-        virtual void init(const param& params);
-        virtual int get_action();
-        virtual void build_traj();
-        virtual void print_traj(std::string out_dir) const;
+        void init(const param& params);
+        int get_action(bool eval);
+        void build_traj();
+        void build_eval_traj();
+        void print_traj(std::string out_dir) const;
 
         // ABSTRACT FUNCTIONS
         virtual void learning_update() = 0;

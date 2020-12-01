@@ -7,9 +7,31 @@ env{env}, generator{generator}, m_gamma{params.d.at("gamma")} {}
 
 void RLAlgorithm::run(const param& params) {
 
-    int n_steps = params.d.at("n_steps");
-    int traj_points = params.d.at("traj_points");
-    int traj_step = round(n_steps/float(traj_points));
+    int n_steps, traj_step, eval_steps;
+    try {
+        n_steps = params.d.at("n_steps");
+        int traj_points = params.d.at("traj_points");
+        traj_step = round(n_steps/float(traj_points));
+        if (params.d.find("eval_steps") != params.d.end())
+            eval_steps = params.d.at("eval_steps");
+    } catch (std::exception) {
+        throw std::invalid_argument("Invalid temporal parameters of the algorithm.");
+    }
+
+    std::cout << "Training\n";
+    // Training loop
+    train(n_steps, traj_step, params);
+
+    if (eval_steps > 0) {
+        std::cout << "\nEvaluating...";
+        // Evaluation loop
+        evaluate(eval_steps);
+    }
+}
+
+
+void RLAlgorithm::train(int n_steps, int traj_step, const param& params) {
+
     curr_episode = 1;
     curr_ep_step = 1;
     int perc_step = 5;
@@ -25,14 +47,13 @@ void RLAlgorithm::run(const param& params) {
     // Algorithm-specific initialization
     init(params);
 
-    // Main loop
     for (curr_step=0; curr_step<n_steps; ++curr_step){
 
         // Algorithm-specific action at the current step
-        curr_action = get_action();
+        curr_action = get_action(false);
 
         // Envitonmental step
-        curr_info = (*env).step(curr_action);
+        curr_info = (*env).step(curr_action, false);
         ret += curr_info.reward * curr_gamma_fact;
         curr_new_aggr_state = (*env).aggr_state();
 
@@ -69,8 +90,46 @@ void RLAlgorithm::run(const param& params) {
             av_ret = 0;
         }
     }
+
+    build_traj();
 }
 
+
+void RLAlgorithm::evaluate(int eval_steps) {
+
+    state_traj = vec2d(eval_steps);
+    aggr_st_traj = veci(eval_steps);
+    action_traj = veci(eval_steps);
+    rew_traj = vecd(eval_steps);
+    done_traj = veci(eval_steps);
+
+    curr_aggr_state = (*env).reset_state();
+
+    for (int e_step=0; e_step<eval_steps; ++e_step){
+
+        // Algorithm-specific action at the current step
+        curr_action = get_action(true);
+
+        // Envitonmental step
+        curr_info = (*env).step(curr_action, true);
+        curr_new_aggr_state = (*env).aggr_state();
+
+        state_traj[e_step] = (*env).state();
+        aggr_st_traj[e_step] = curr_aggr_state;
+        action_traj[e_step] = curr_action;
+        rew_traj[e_step] = curr_info.reward;
+        done_traj[e_step] = curr_info.done;
+
+        // At terminal state
+        if (curr_info.done){ 
+            curr_aggr_state = (*env).reset_state();
+        } 
+        // At non-terminal state
+        else { 
+            curr_aggr_state = curr_new_aggr_state;
+        }
+    }
+}
 
 
 void RLAlgorithm::print_output(std::string dir) const {
@@ -82,9 +141,37 @@ void RLAlgorithm::print_output(std::string dir) const {
     for (int t=0; t<return_traj.size(); t++){
         file_r << return_traj[t] << "\t" << ep_len_traj[t] << "\n";
     }
+    file_r.close();
 
     // Printing the algorithm-specific trajectories
     print_traj(dir);
+
+    // Printing the evaluation trajectory of the states
+    std::ofstream file_s;
+    file_s.open(dir + "/ev_states.txt");
+
+    for (int k=0; k<state_traj[0].size(); k++)
+        file_s << (*env).state_descr()[k] << "\t";
+    file_s << "\n";
+    for (int t=0; t<state_traj.size(); t++){
+        for (int k=0; k<state_traj[0].size(); k++)
+            file_s << state_traj[t][k] << "\t";
+        file_s << "\n";
+    }
+    file_s.close();
+
+    // Printing the evaluation trajectory of the info
+    std::ofstream file_info;
+    file_info.open(dir + "/ev_info.txt");
+    file_info << "state_index\tstate_descr\tacion_index\taction_decr\treward\n";
+    for (int t=0; t<aggr_st_traj.size(); t++){
+        file_info << aggr_st_traj[t] << "\t";
+        file_info << (*env).aggr_state_descr()[aggr_st_traj[t]] << "\t";
+        file_info << action_traj[t] << "\t";
+        file_info << (*env).action_descr()[action_traj[t]] << "\t";
+        file_info << rew_traj[t] << "\n";
+    }
+    file_info.close();
 }
 
 

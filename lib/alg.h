@@ -9,6 +9,24 @@
    the learning quantities. */
 class RLAlgorithm {
 
+    private:
+
+        // TRAJECTORY FOR EVALUATION   
+        int ev_traj_step;
+        /* Trajectory of all the states */
+        vec2d state_traj;
+        /* Aggregate states trajectory */
+        veci aggr_st_traj;
+        /* Action trajectory */
+        veci action_traj;
+        /* Reward trajectory */
+        vecd rew_traj;
+        /* Done trajectory */
+        veci done_traj;
+
+        void train(int n_steps, int traj_step, const param& params);
+        void evaluate(int eval_steps);
+
     protected:
 
         /* MDP to solve */
@@ -42,7 +60,7 @@ class RLAlgorithm {
 
         // ALGORITHM SPECIFIC METHODS
         virtual void init(const param& params) = 0;
-        virtual int get_action() = 0;
+        virtual int get_action(bool eval) = 0;
         virtual void learning_update() = 0;
         virtual void build_traj() = 0;
         virtual void print_traj(std::string out_dir) const = 0;

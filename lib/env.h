@@ -46,7 +46,7 @@ class Environment {
         virtual int reset_state() = 0;
         /* Environmental transition given the action which modifies the 
            internal state and return the reward and the termination flag. */
-        virtual env_info step(int action) = 0;
+        virtual env_info step(int action, bool eval) = 0;
         /* Reward ot penalty in the terminal state, zero by default */
         virtual double terminal_reward(double gamma) { return 0; };
         /* Information about the environment */
