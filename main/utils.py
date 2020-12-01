@@ -1,4 +1,5 @@
 import numpy as np
+import matplotlib.pyplot as plt
 import os
 
 
@@ -8,7 +9,24 @@ def p_law_burn(x, x_burn, expn, c0, cc):
         return c0
     else:
         return c0*cc / (cc + (x-x_burn)**expn)
-    
+   
+
+def plot_lr_eps(alg_params):
+    fig, (ax1, ax2) = plt.subplots(1,2,figsize=(7,3))
+
+    ax1.set_xlabel('Learning step', fontsize=14)
+    ax1.set_ylabel('Learning rate', fontsize=14)
+    ax1.set_yscale('log')
+    xs = np.linspace(0, alg_params['n_steps'], 100)
+    lr = [p_law_burn(x, alg_params['lr_burn'], alg_params['lr_expn'], alg_params['lr0'], alg_params['lrc']) for x in xs]
+    ax1.plot(xs, lr)
+    ax2.set_xlabel('Learning step', fontsize=14)
+    ax2.set_ylabel('Epsilon', fontsize=14)
+    ax2.set_yscale('log')
+    eps = [p_law_burn(x, alg_params['eps_burn'], alg_params['eps_expn'], alg_params['eps0'], alg_params['epsc']) for x in xs]
+    ax2.plot(xs, eps)
+    return fig, (ax1, ax2)
+
 
 def write_params(param_dict, dir_path, file_name):
     """Write a parameter file"""

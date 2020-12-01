@@ -20,8 +20,13 @@ class Kite : public Environment {
 		// SET BY CONSTRUCTOR
 		/* Episode length */
 		int ep_length;
+		/* Episode length during evaluation */
+		int ep_length_ev;
 		/* Number of consecutive steps between training */
 		int steps_btw_train;
+
+		int fallen_times;
+		int errors;
 
 	protected:
 
@@ -69,10 +74,18 @@ class Kite : public Environment {
 		/* Constructor */
 		Kite(const param& params, std::mt19937& generator);
 
+		/* Set the environment in the initial state */
+        int reset_state();
+
+        /* Step is called before every learning update. It first imposes the action though the env-specific abstract
+		   method "impose_action(int action)". Then it integrates the trajectory for "steps_btw_train" times calling
+		   "integrate_trajectory()". At the end it retruns the env_info with "get_rew_and_done()" */
+        env_info step(int action, bool eval);
+
 		/* Kite description */
 		virtual const std::string descr() const = 0;
 
-       /* Get the aggregate-state-space shape */
+        /* Get the aggregate-state-space shape */
         virtual unsigned int n_aggr_state() const = 0;
 
         /* Get the number of actions */
@@ -93,16 +106,8 @@ class Kite : public Environment {
 		/* Abstract. Get the current aggregate state */
 		virtual int aggr_state() const = 0;
 
-		/* Set the environment in the initial state */
-        virtual int reset_state();
-
 		/* Abstract. Set the specific kite in the initial state */
         virtual int reset_kite() = 0;
-
-        /* Step is called before every learning update. It first imposes the action though the env-specific abstract
-		   method "impose_action(int action)". Then it integrates the trajectory for "steps_btw_train" times calling
-		   "integrate_trajectory()". At the end it retruns the env_info with "get_rew_and_done()" */
-        virtual env_info step(int action);
 
         /* Abstract. Change the internal state as a consequence of the action */
         virtual void impose_action(int action) = 0;
@@ -115,6 +120,9 @@ class Kite : public Environment {
 
 		/* Number of attack angles */
         int n_alphas() const { return alphas.size(); }
+
+        virtual vecd env_data();
+        virtual vecs env_data_headers();
 };
 
 

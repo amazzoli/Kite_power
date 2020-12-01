@@ -91,12 +91,14 @@ class Perc {
 			}
 			else m_perc_step = perc_step;
 		};
-		void step(int curr_step) {
+		bool step(int curr_step) {
 			double perc = (double)curr_step/(double)m_max_steps*100;
 			if (perc >= m_last_perc){
-				std::cout << round(perc) << "%\n";
+				std::cout << "\n" << round(perc) << "%";
 				m_last_perc = round(perc) + m_perc_step;
+				return true;
 			}
+			return false;
 		}
 };
 

@@ -62,7 +62,7 @@ void AC::init(const param& params){
 }
 
 
-int AC::get_action() {
+int AC::get_action(bool eval) {
 
         // Policy from parameters
         par2pol_boltzmann(curr_p_pars[curr_aggr_state], curr_policy);

@@ -1,4 +1,4 @@
-#include "../lib/nac.h"
+//#include "../lib/nac.h"
 #include "../lib/qalg.h"
 #include "../lib/eval.h"
 #include "../lib/envs/kite.h"
@@ -19,7 +19,8 @@ int main(int argc, char** argv) {
 
     // Init random generator
     //unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
-    unsigned seed = 1234;
+    unsigned seed = 1;
+    std::cout << "\nWarning! Fixed seed!\n\n";
     std::mt19937 generator(seed);
 
     // Importing the parameters file
@@ -39,11 +40,11 @@ int main(int argc, char** argv) {
     Timer timer;
     std::cout << "Algorithm started\n";
     (*alg).run(alg_params);
-    std::cout << "Algorithm completed in " << timer.elapsed() << " seconds\n";
+    std::cout << "\nAlgorithm completed in " << timer.elapsed() << " seconds\n";
 
     // Printing the trajectories
     (*alg).print_output(data_dir + env_name + "/" + alg_name + "/");
-    std::cout << "Trajectories successfully printed\n";
+    std::cout << "Trajectories successfully printed at " << data_dir + env_name + "/" + alg_name + "/" << "\n";
 
     delete env;
     delete alg;
@@ -87,13 +88,13 @@ RLAlgorithm* get_alg(Environment* env, const param& params, std::mt19937& genera
 
     std::string alg_name = params.s.at("alg_type");
 
-    if (alg_name == "ac"){
-        return new AC(env, params, generator);
-    }
-    else if (alg_name == "nac"){
-		return new NAC_AP(env, params, generator);
-    }
-    else if (alg_name == "sarsa"){
+  //   if (alg_name == "ac"){
+  //       return new AC(env, params, generator);
+  //   }
+  //   else if (alg_name == "nac"){
+		// return new NAC_AP(env, params, generator);
+  //   }
+    if (alg_name == "sarsa"){
 		return new SARSA_eps(env, params, generator);
     }
     else if (alg_name == "ql"){

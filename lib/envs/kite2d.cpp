@@ -16,7 +16,7 @@ Kite{params, generator}, wind{wind} {
 
 
 const std::string Kite2d::descr() const {
-    return "2d kite. Attack angle observed. Attack angle controlled. " + wind->descr();
+    return "2d kite. Attack angle observed. Attack angle controlled.\n" + wind->descr();
 }
 
 
