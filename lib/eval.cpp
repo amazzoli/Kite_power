@@ -45,6 +45,7 @@ void Eval::print_traj(std::string dir) const {
 
     std::ofstream file_s;
     file_s.open(dir + "/ev_states.txt");
+    
     for (int k=0; k<m_state_traj[0].size(); k++)
         file_s << (*env).state_descr()[k] << "\t";
     file_s << "\n";
