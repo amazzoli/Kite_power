@@ -16,7 +16,9 @@ class Eval : public RLAlgorithm {
         vec2d m_state_traj;
         /* Aggregate states trajectory */
         veci m_aggr_st_traj;
-        /* Uniform random distribution */ 
+        /* Action trajectory */
+        veci action_traj;
+        /* Uniform random distribution */
         std::uniform_real_distribution<double> unif_dist;
         /* Uniform distribution over the actions */
         std::uniform_int_distribution<int> unif_act_dist;
@@ -34,7 +36,7 @@ class Eval : public RLAlgorithm {
         /* Construct the algorithm given the parameters dictionary */
         Eval(Environment* env, const param& params, std::mt19937& generator);
 
-        /* Description */ 
+        /* Description */
         const std::string descr() const { return "Evaluation algorithm."; }
 };
 

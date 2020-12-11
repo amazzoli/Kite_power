@@ -12,6 +12,7 @@ void RLAlgorithm::run(const param& params) {
         n_steps = params.d.at("n_steps");
         int traj_points = params.d.at("traj_points");
         traj_step = round(n_steps/float(traj_points));
+        std::cout << traj_step << '\n';
         if (params.d.find("eval_steps") != params.d.end())
             eval_steps = params.d.at("eval_steps");
     } catch (std::exception) {
@@ -121,11 +122,11 @@ void RLAlgorithm::evaluate(int eval_steps) {
         done_traj[e_step] = curr_info.done;
 
         // At terminal state
-        if (curr_info.done){ 
+        if (curr_info.done){
             curr_aggr_state = (*env).reset_state();
-        } 
+        }
         // At non-terminal state
-        else { 
+        else {
             curr_aggr_state = curr_new_aggr_state;
         }
     }
@@ -163,7 +164,7 @@ void RLAlgorithm::print_output(std::string dir) const {
     // Printing the evaluation trajectory of the info
     std::ofstream file_info;
     file_info.open(dir + "/ev_info.txt");
-    file_info << "state_index\tstate_descr\tacion_index\taction_decr\treward\n";
+    file_info << "state_index\tstate_descr\taction_index\taction_descr\treward\n";
     for (int t=0; t<aggr_st_traj.size(); t++){
         file_info << aggr_st_traj[t] << "\t";
         file_info << (*env).aggr_state_descr()[aggr_st_traj[t]] << "\t";

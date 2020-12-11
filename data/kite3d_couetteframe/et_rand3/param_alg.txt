@@ -1,0 +1,15 @@
+alg_type	et
+lambda	0.9
+gamma	1.0
+n_steps	200000000
+traj_points	200
+eval_steps	20000
+lr0	0.001
+lrc	250000.0
+lr_expn	0.8
+lr_burn	133333333.33333333
+eps0	0.001
+epsc	1333333.3333333333
+eps_expn	1
+eps_burn	50000000.0
+init_quals	3000

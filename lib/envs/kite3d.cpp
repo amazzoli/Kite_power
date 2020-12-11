@@ -19,6 +19,24 @@ Kite{params, generator}, wind{wind} {
     init_dphi = params.d.at("init_dphi");
     init_bank_ind = params.d.at("init_bank");
 
+    if (params.d.find("init_xblock") != params.d.end()) {
+        init_xblock = params.d.at("init_xblock");
+        std::cout << "Starting from x_block = " << init_xblock << "\n";
+    }
+    else {
+        init_xblock = std::uniform_real_distribution<double>(0.0,100)(m_generator);
+        std::cout << "Starting from random initial conditions on x_block " << "\n";
+    }
+
+    if (params.d.find("init_yblock") != params.d.end()) {
+        init_yblock = params.d.at("init_yblock");
+        std::cout << "Starting from y_block = " << init_yblock << "\n";
+    }
+    else {
+        init_yblock = std::uniform_real_distribution<double>(-40,40)(m_generator);
+        std::cout << "Starting from random initial conditions on y_block " << "\n";
+    }
+
     //debug_file.open("debug.txt");
 }
 
@@ -95,9 +113,9 @@ int Kite3d::reset_kite(){
     bank_ind = init_bank_ind;
 
     // Block position, velocity, acceleration
-    x_block = std::uniform_real_distribution<double>(0.0,100)(m_generator);
+    x_block = init_xblock;
     //x_block = 0;
-    y_block = std::uniform_real_distribution<double>(-40,40)(m_generator);
+    y_block = init_yblock;
     //y_block = 40;
     vx_block = 0;
     ax_block = 0;

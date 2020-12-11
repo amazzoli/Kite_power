@@ -1,0 +1,2 @@
+kite_pos_x	kite_pos_y	kite_pos_z	kite_vel_x	kite_vel_y	kite_vel_z	kite_acc_x	kite_acc_y	kite_acc_z	block_pos_x	block_vel_x	block_acc_x	
+33.641	-4.51424	37.762	7.27111	-22.5224	-0.909963	93.2939	63.9192	-68.9053	1.17962	9.04454	19.6219	

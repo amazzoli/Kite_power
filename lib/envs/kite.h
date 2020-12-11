@@ -54,6 +54,10 @@ class Kite : public Environment {
 		/* Initial attack angle index. If > n_alphas they are generated at random */
 		int init_alpha_ind;
 		/* Integration time step */
+		double init_xblock;
+		/*Initial x position of the block*/
+		double init_yblock;
+		/*Initial y position of the block*/
 		double h;
 		/* Discretization of the attack angle */
 		vecd alphas;

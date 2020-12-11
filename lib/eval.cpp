@@ -3,9 +3,9 @@
 
 Eval::Eval(Environment* env, const param& params, std::mt19937& generator):
 RLAlgorithm(env, params, generator) {
-    if (params.d.find("epsilon") != params.d.end())  
+    if (params.d.find("epsilon") != params.d.end())
         eps = params.d.at("epsilon");
-    else 
+    else
         eps = 0;
     m_quality = read_quality(params.s.at("quality_path"));
     unif_dist = std::uniform_real_distribution<double>(0.0,1.0);
@@ -16,6 +16,7 @@ RLAlgorithm(env, params, generator) {
 void Eval::init(const param& params){
     m_state_traj = vec2d(0);
     m_aggr_st_traj = veci(0);
+    action_traj = veci(0);
 }
 
 
@@ -38,6 +39,7 @@ void Eval::learning_update() {}
 void Eval::build_traj() {
     m_state_traj.push_back((*env).state());
     m_aggr_st_traj.push_back(curr_aggr_state);
+    action_traj.push_back(curr_action);
 }
 
 
@@ -59,7 +61,7 @@ void Eval::print_traj(std::string dir) const {
     file_as.open(dir + "/ev_aggr_st.txt");
     file_as << "Index\tDescription\n";
     for (int t=0; t<m_aggr_st_traj.size(); t++){
-        file_as << m_aggr_st_traj[t] << "\t" << (*env).aggr_state_descr()[m_aggr_st_traj[t]] << "\n";
+        file_as << m_aggr_st_traj[t] << "\t" << (*env).aggr_state_descr()[m_aggr_st_traj[t]] << "\t" << action_traj[t] << "\n";
     }
     file_as.close();
 }
