@@ -12,7 +12,7 @@ class RLAlgorithm {
     private:
 
         // TRAJECTORY FOR EVALUATION   
-        int ev_traj_step;
+        int ev_step;
         /* Trajectory of all the states */
         vec2d state_traj;
         /* Aggregate states trajectory */
@@ -25,7 +25,7 @@ class RLAlgorithm {
         veci done_traj;
 
         void train(int n_steps, int traj_step, const param& params);
-        void evaluate(int eval_steps);
+        void evaluate();
 
     protected:
 

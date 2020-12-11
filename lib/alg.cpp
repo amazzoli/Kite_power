@@ -7,14 +7,15 @@ env{env}, generator{generator}, m_gamma{params.d.at("gamma")} {}
 
 void RLAlgorithm::run(const param& params) {
 
-    int n_steps, traj_step, eval_steps;
+    ev_step = 0;
+    int n_steps, traj_step;
     try {
         n_steps = params.d.at("n_steps");
         int traj_points = params.d.at("traj_points");
         traj_step = round(n_steps/float(traj_points));
         std::cout << traj_step << '\n';
         if (params.d.find("eval_steps") != params.d.end())
-            eval_steps = params.d.at("eval_steps");
+            ev_step = params.d.at("eval_steps");
     } catch (std::exception) {
         throw std::invalid_argument("Invalid temporal parameters of the algorithm.");
     }
@@ -23,10 +24,10 @@ void RLAlgorithm::run(const param& params) {
     // Training loop
     train(n_steps, traj_step, params);
 
-    if (eval_steps > 0) {
+    if (ev_step > 0) {
         std::cout << "\nEvaluating...";
         // Evaluation loop
-        evaluate(eval_steps);
+        evaluate();
     }
 }
 
@@ -96,17 +97,17 @@ void RLAlgorithm::train(int n_steps, int traj_step, const param& params) {
 }
 
 
-void RLAlgorithm::evaluate(int eval_steps) {
+void RLAlgorithm::evaluate() {
 
-    state_traj = vec2d(eval_steps);
-    aggr_st_traj = veci(eval_steps);
-    action_traj = veci(eval_steps);
-    rew_traj = vecd(eval_steps);
-    done_traj = veci(eval_steps);
+    state_traj = vec2d(ev_step);
+    aggr_st_traj = veci(ev_step);
+    action_traj = veci(ev_step);
+    rew_traj = vecd(ev_step);
+    done_traj = veci(ev_step);
 
     curr_aggr_state = (*env).reset_state();
 
-    for (int e_step=0; e_step<eval_steps; ++e_step){
+    for (int e_step=0; e_step<ev_step; ++e_step){
 
         // Algorithm-specific action at the current step
         curr_action = get_action(true);
@@ -148,29 +149,31 @@ void RLAlgorithm::print_output(std::string dir) const {
     print_traj(dir);
 
     // Printing the evaluation trajectory of the states
-    std::ofstream file_s;
-    file_s.open(dir + "/ev_states.txt");
+    if (ev_step > 0) {
+        std::ofstream file_s;
+        file_s.open(dir + "/ev_states.txt");
 
-    for (int k=0; k<state_traj[0].size(); k++)
-        file_s << (*env).state_descr()[k] << "\t";
-    file_s << "\n";
-    for (int t=0; t<state_traj.size(); t++){
         for (int k=0; k<state_traj[0].size(); k++)
-            file_s << state_traj[t][k] << "\t";
+            file_s << (*env).state_descr()[k] << "\t";
         file_s << "\n";
-    }
-    file_s.close();
+        for (int t=0; t<state_traj.size(); t++){
+            for (int k=0; k<state_traj[0].size(); k++)
+                file_s << state_traj[t][k] << "\t";
+            file_s << "\n";
+        }
+        file_s.close();
 
-    // Printing the evaluation trajectory of the info
-    std::ofstream file_info;
-    file_info.open(dir + "/ev_info.txt");
-    file_info << "state_index\tstate_descr\taction_index\taction_descr\treward\n";
-    for (int t=0; t<aggr_st_traj.size(); t++){
-        file_info << aggr_st_traj[t] << "\t";
-        file_info << (*env).aggr_state_descr()[aggr_st_traj[t]] << "\t";
-        file_info << action_traj[t] << "\t";
-        file_info << (*env).action_descr()[action_traj[t]] << "\t";
-        file_info << rew_traj[t] << "\n";
+        // Printing the evaluation trajectory of the info
+        std::ofstream file_info;
+        file_info.open(dir + "/ev_info.txt");
+        file_info << "state_index\tstate_descr\tacion_index\taction_decr\treward\n";
+        for (int t=0; t<aggr_st_traj.size(); t++){
+            file_info << aggr_st_traj[t] << "\t";
+            file_info << (*env).aggr_state_descr()[aggr_st_traj[t]] << "\t";
+            file_info << action_traj[t] << "\t";
+            file_info << (*env).action_descr()[action_traj[t]] << "\t";
+            file_info << rew_traj[t] << "\n";
+        }
+        file_info.close();
     }
-    file_info.close();
 }
