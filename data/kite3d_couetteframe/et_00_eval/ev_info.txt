@@ -1,2 +1,0 @@
-state_index	state_descr	action_index	action_descr	reward
-1154	attack_ang_20.000000,bank_angle_0.000000,vrel_angle_-0.224399	8	a_incr_b_incr	2.27018

@@ -12,6 +12,8 @@ class Eval : public RLAlgorithm {
 
         /* Policy to evaluate */
         vec2d m_quality;
+        /* 2nd policy to evaluate */
+        vec2d m_quality2;
         /* Trajectory of all the states */
         vec2d m_state_traj;
         /* Aggregate states trajectory */
@@ -26,7 +28,7 @@ class Eval : public RLAlgorithm {
         double eps;
 
         virtual void init(const param& params);
-        virtual int get_action(bool eval);
+        virtual int get_action(bool sw);
         virtual void learning_update();
         virtual void build_traj();
         virtual void print_traj(std::string out_dir) const;

@@ -93,7 +93,7 @@ double* Wind3d_turboframe::init(double x, double y, double z) {
 
     // Translating the y such that 0 is in the middle of the canal and imposing boundary conditions
     y += y_size / 2.0;
-    int my = y / y_size;
+    float my = floor(y / y_size);
     y -= my*y_size;
 
     // Translating the z such that 0 is on the ground (we assume that z doesn't goes out of bounds)
@@ -143,7 +143,7 @@ double* Wind3d_turboframe::velocity(double x, double y, double z, double t){
 
     // Translating the y such that 0 is in the middle of the canal and imposing boundary conditions
     y += y_size / 2.0;
-    int my = y / y_size;
+    float my = floor(y / y_size);
     y -= my*y_size;
 
     // Translating the z such that 0 is on the ground (we assume that z doesn't goes out of bounds)
@@ -203,6 +203,7 @@ double* Wind3d_turboframe::velocity(double x, double y, double z, double t){
 
 
 double* Wind3d_turboframe::compute_velocity(double x, double y, double z, int frame) {
+
     int ind=n_z*n_x_axis_points*n_y_axis_points+n_x*n_y_axis_points+n_y;
     //std::cout << x << " " << y << " "<< z << " " << n_x << " " << n_y << " "<< n_z << "\n";
 
@@ -257,9 +258,9 @@ Wind3d_turbo::Wind3d_turbo(const param& params) {
         start_frame = params.d.at("start_frame");
         q_path = params.s.at("windq_file_path");
         wind_amplif = params.d.at("wind_amplification");
-    } catch (std::exception) 
+    } catch (std::exception)
     { throw std::runtime_error( "Invalid parameters of turbolent wind" ); }
-    
+
     read_grid_file(q_path, q_grid);
     read_grid_files(v_dir, v_name, start_frame);
 }
@@ -294,6 +295,7 @@ void Wind3d_turbo::read_grid_files(std::string dir, std::string name, int start_
 
 
 double* Wind3d_turbo::compute_velocity(double x, double y, double z, int frame) {
+
     int ind=n_z*n_x_axis_points*n_y_axis_points+n_x*n_y_axis_points+n_y;
     //std::cout << x << " " << y << " "<< z << " " << n_x << " " << n_y << " "<< n_z << "\n";
 

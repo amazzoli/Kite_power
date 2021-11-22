@@ -9,14 +9,26 @@ RLAlgorithm(env, params, generator) {
     // Learning rate scheduling
     lr = d_i_fnc{
         [&params](int step) {
-            return plaw_dacay(step, params.d.at("lr_burn"), params.d.at("lr_expn"), params.d.at("lr0"), params.d.at("lrc"));
+            return p2steps_decay(step, params.d.at("lr_burn0"), params.d.at("lr0"), params.d.at("lr1"));
+        }
+    };
+
+    lr_sa = d_i_fnc{
+        [&params](int n_occ) {
+            return plaw_statedecay(n_occ, params.d.at("n0"), params.d.at("lr_expn"), params.d.at("lr0"));
         }
     };
 
     // Exploration scheduling
     eps = d_i_fnc{
         [&params](int step) {
-            return plaw_dacay(step, params.d.at("eps_burn"), params.d.at("eps_expn"), params.d.at("eps0"), params.d.at("epsc"));
+            return plaw_decay(step, params.d.at("eps_burn"), params.d.at("eps_expn"), params.d.at("eps0"), params.d.at("epsc"));
+        }
+    };
+
+    eps_sa = d_i_fnc{
+        [&params](int n_occ) {
+            return plaw_statedecay(n_occ, params.d.at("n0"), params.d.at("eps_expn"), params.d.at("eps0"));
         }
     };
 
@@ -41,7 +53,7 @@ void QAlg_eps::init(const param& params) {
 
     if (params.s.find("init_q_path") == params.s.end()) {
         std::cout << "Starting from flat initial conditions equal to " << params.d.at("init_quals") << "\n";
-        quality = const_quals(params.d.at("init_quals"));
+        quality = noisy_quals(params.d.at("init_quals"));
     }
     else {
         std::cout << "Starting from initial conditions at " << params.s.at("init_q_path") << "\n";
@@ -58,10 +70,10 @@ void QAlg_eps::init(const param& params) {
 }
 
 
-int QAlg_eps::get_action(bool eval) {
+int QAlg_eps::get_action(bool sw) {
 
     int action;
-    if (eval || unif_dist(generator) > eps(curr_step)){
+    if (unif_dist(generator) > eps(curr_step)){
         auto max_elem = std::max_element(quality[curr_aggr_state].begin(), quality[curr_aggr_state].end());
         action = std::distance(quality[curr_aggr_state].begin(), max_elem);
     }
@@ -82,7 +94,7 @@ void QAlg_eps::build_traj() {
 
     // Info trajectory
     ep_traj[t_time] = curr_episode;
-    lr_traj[t_time] = lr(curr_step);
+    lr_traj[t_time] = lr_sa(curr_occ_n);
     eps_traj[t_time] = eps(curr_step);
     env_info_traj[t_time] = (*env).env_data();
 
@@ -93,7 +105,7 @@ void QAlg_eps::build_traj() {
 void QAlg_eps::print_traj(std::string out_dir) const {
 
     // PRINTING THE TRAJECTOIES
-    std::ofstream out_q, out_p, out_i;
+    std::ofstream out_q, out_p, out_i, out_m;
     out_q.open(out_dir + "quality_traj.txt");
     out_i.open(out_dir + "info_traj.txt");
 
@@ -133,6 +145,7 @@ void QAlg_eps::print_traj(std::string out_dir) const {
     // PRINTING THE BEST VALUES AND THE BEST POLICIES
     out_p.open(out_dir + "best_policy.txt");
     out_q.open(out_dir + "best_quality.txt");
+    out_m.open(out_dir + "occ_matrix.txt");
     for (int k=0; k<quality.size(); k++){
         vecd policy = vecd(quality[k].size());
         auto max_a_iter = std::max_element(quality[k].begin(), quality[k].end());
@@ -141,21 +154,37 @@ void QAlg_eps::print_traj(std::string out_dir) const {
         for (int a=0; a<policy.size()-1; a++){
             out_p << policy[a];
             out_q << quality[k][a];
+            out_m << m_sa[k][a];
             if (a < policy.size()-2)
                 out_p << " ";
+            out_m << ",";
             out_q << ",";
         }
         out_q << quality[k][policy.size()-1] << "\n";
+        out_m << m_sa[k][policy.size()-1] << "\n";
         out_p << "\n";
     }
     out_q.close();
     out_p.close();
+    out_m.close();
 }
 
 
 vec2d QAlg_eps::const_quals(double val){
     vecd qual_at_s = vecd((*env).n_actions(), val);
     return vec2d((*env).n_aggr_state(), qual_at_s);
+}
+
+vec2d QAlg_eps::noisy_quals(double val){
+    vecd qual_at_s = vecd((*env).n_actions(), val);
+    vec2d quals = vec2d((*env).n_aggr_state(), qual_at_s);
+
+    for (size_t i = 0; i < (*env).n_aggr_state(); i++) {
+        for (size_t j = 0; j < (*env).n_actions(); j++) {
+          quals[i][j] += val/100*gauss_dist(generator);
+        }
+    }
+    return quals;
 }
 
 
@@ -166,22 +195,13 @@ void SARSA_eps::learning_update() {
     if (curr_ep_step > 1){
         // Updating the previous state-action pair
         double td_error = old_reward + m_gamma * quality[curr_aggr_state][curr_action] - quality[old_state][old_action];
-        quality[old_state][old_action] += lr(curr_step) * td_error;
+        quality[old_state][old_action] += lr_sa(m_sa[old_state][old_action]) * td_error;
     }
 
     if (curr_info.done){
         // Update of the current state-action pair generating a new action
-        double new_q;
-        if (unif_dist(generator) < eps(curr_step)) // q from exploration
-            double new_q = quality[curr_new_aggr_state][unif_act_dist(generator)];
-        else // q from exploitation
-            double new_q = *std::max(quality[curr_new_aggr_state].begin(), quality[curr_new_aggr_state].end());
-        double td_error = curr_info.reward + m_gamma * new_q - quality[curr_aggr_state][curr_action];
-        quality[curr_aggr_state][curr_action] += lr(curr_step) * td_error;
-
-        // Terminal update for all the qualities at the terminal state
-        for (int a=0; a<quality[curr_new_aggr_state].size(); a++)
-            quality[curr_new_aggr_state][a] += lr(curr_step) * ((*env).terminal_reward(m_gamma) - quality[curr_new_aggr_state][a]);
+        double td_error = curr_info.reward + m_gamma * (*env).terminal_reward(m_gamma) - quality[curr_aggr_state][curr_action];
+        quality[curr_aggr_state][curr_action] += lr_sa(curr_occ_n) * td_error;
     }
 
     old_state = curr_aggr_state;

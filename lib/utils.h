@@ -39,7 +39,7 @@ struct param {
 // BASIC GLOBAL CONSTANTS
 const double PI = 3.1415926535897932384626433;
 /* Air density, kg/m^3 */
-const double rho = 1.225; 
+const double rho = 1.225;
 /* Gravity acceleration, m/s^2 */
 const double g = 9.806;
 
@@ -48,7 +48,13 @@ void par2pol_boltzmann(const vecd& params, vecd& policy);
 
 void pol2par_boltzmann(const vecd& policy, vecd& params);
 
-double plaw_dacay(double t, double t_burn, double expn, double a0, double ac);
+double plaw_decay(double t, double t_burn, double expn, double a0, double ac);
+
+double pmix_decay(double t, double t_burn0, double t_burn1, double expn, double a0, double a1, double ac);
+
+double p2steps_decay(double t, double t_burn, double a0, double a1);
+
+double plaw_statedecay(int n, double n0, double expn, double a0);
 
 vecd str2vecd(std::string line, std::string separator, bool sep_at_end);
 
@@ -57,6 +63,8 @@ param parse_param_file(std::string file_path);
 vecd read_value(std::string file_path);
 
 vec2d read_quality(std::string file_path);
+
+vec2i read_occ(std::string file_path);
 
 vec2d read_policy(std::string file_path);
 

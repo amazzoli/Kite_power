@@ -1,3 +1,0 @@
-Episode	Learn_rate	Epsilon	Fallen_times	Reward_error	
-1	0.001	0	0	0	
-560793	0.000240274	0	489453	0	

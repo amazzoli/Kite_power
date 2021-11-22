@@ -8,6 +8,7 @@
 struct env_info {
     double reward;
     bool done;
+    //bool switch;
 };
 
 
@@ -49,6 +50,8 @@ class Environment {
         virtual env_info step(int action, bool eval) = 0;
         /* Reward ot penalty in the terminal state, zero by default */
         virtual double terminal_reward(double gamma) { return 0; };
+
+        virtual double terminal_distance() { return 0; };
         /* Information about the environment */
         virtual vecd env_data() { return vecd(0); }
         virtual vecs env_data_headers() { return vecs(0); }

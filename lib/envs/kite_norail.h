@@ -126,7 +126,6 @@ class Kite : public Environment {
         /* Abstract. Get the reward given the internal state */
         virtual double get_rew(int steps_from_training) = 0;
 
-
 		/* Number of attack angles */
         int n_alphas() const { return alphas.size(); }
 
@@ -205,10 +204,9 @@ class Kite3d : public Kite {
 		double pos_kite[3];
 		double vel_kite[3];
 		double acc_kite[3];
-		double x_block;
-		double y_block;
-		double vx_block;
-		double ax_block;
+		double pos_block[3];
+		double vel_block[3];
+		double acc_block[3];
 		int bank_ind;
 		double x_diff;
 		double y_diff;
@@ -218,7 +216,7 @@ class Kite3d : public Kite {
 		double va[3];
 		double f_aer[3];
 		double tension[3];
-		double friction;
+		double friction[2];
 		vecd m_state;
 		double time_sec;
 
@@ -244,6 +242,7 @@ class Kite3d : public Kite {
         virtual void impose_action(int action);
         virtual bool integrate_trajectory();
         virtual double get_rew(int steps_from_training);
+				virtual double terminal_distance();
         virtual double terminal_reward(double gamma);
 		int n_banks() const { return bank.size(); }
 };

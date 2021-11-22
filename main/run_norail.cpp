@@ -1,7 +1,7 @@
 //#include "../lib/nac.h"
 #include "../lib/qalg.h"
 #include "../lib/eval.h"
-#include "../lib/envs/kite.h"
+#include "../lib/envs/kite_norail.h"
 
 
 // Algorithm launcher. It must be launched giving also the environment_name and the trial_name.
@@ -88,12 +88,6 @@ RLAlgorithm* get_alg(Environment* env, const param& params, std::mt19937& genera
 
     std::string alg_name = params.s.at("alg_type");
 
-  //   if (alg_name == "ac"){
-  //       return new AC(env, params, generator);
-  //   }
-  //   else if (alg_name == "nac"){
-		// return new NAC_AP(env, params, generator);
-  //   }
     if (alg_name == "sarsa"){
 		return new SARSA_eps(env, params, generator);
     }

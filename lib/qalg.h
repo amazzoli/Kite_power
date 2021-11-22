@@ -5,8 +5,8 @@
 #include "alg.h"
 
 
-/* Generic algorithm for the quality update and epsilon-greed expolration. The exploration 
-   and the learning rate parameters have a power-law shape. */ 
+/* Generic algorithm for the quality update and epsilon-greed expolration. The exploration
+   and the learning rate parameters have a power-law shape. */
 class QAlg_eps : public RLAlgorithm {
 
     protected:
@@ -17,12 +17,18 @@ class QAlg_eps : public RLAlgorithm {
         veci traj_states;
         /* Learning rate scheduling */
         d_i_fnc lr;
-        /* Expolation scheduling */
+        /* Learning rate scheduling according to occupation*/
+        d_i_fnc lr_sa;
+        /* Exploration rate scheduling */
         d_i_fnc eps;
-        /* Uniform random distribution */ 
+        /* Exploration rate scheduling according to occupation*/
+        d_i_fnc eps_sa;
+        /* Uniform random distribution */
         std::uniform_real_distribution<double> unif_dist;
         /* Uniform distribution over the actions */
         std::uniform_int_distribution<int> unif_act_dist;
+
+        std::normal_distribution<double> gauss_dist;
 
         // TRAJECTROIES TO BUILD
         int t_time;
@@ -39,7 +45,7 @@ class QAlg_eps : public RLAlgorithm {
 
         // OVERRIDED FUNCTIONS
         void init(const param& params);
-        int get_action(bool eval);
+        int get_action(bool sw);
         void build_traj();
         void build_eval_traj();
         void print_traj(std::string out_dir) const;
@@ -49,6 +55,7 @@ class QAlg_eps : public RLAlgorithm {
 
         // AUX METOHDS
         vec2d const_quals(double val);
+        vec2d noisy_quals(double val);
 
     public:
 

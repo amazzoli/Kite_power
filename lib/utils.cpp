@@ -25,12 +25,34 @@ void pol2par_boltzmann(const vecd& policy, vecd& params){
 }
 
 
-double plaw_dacay(double t, double t_burn, double expn, double a0, double ac){
-    if (t < t_burn) 
+double plaw_decay(double t, double t_burn, double expn, double a0, double ac){
+    if (t < t_burn)
         return a0;
     else {
         return a0 * ac / (ac + pow(t-t_burn, expn));
     }
+}
+
+double pmix_decay(double t, double t_burn0, double t_burn1, double expn, double a0, double a1, double ac){
+    if (t < t_burn0)
+        return a0;
+    else {
+      if ((t > t_burn0) && (t < t_burn1))
+          return a0 - ((a0 - a1)/(t_burn1 - t_burn0))*(t-t_burn0);
+      else
+        return a1 * ac / (ac + pow(t-t_burn1, expn));
+    }
+}
+
+double p2steps_decay(double t, double t_burn, double a0, double a1){
+    if (t < t_burn)
+        return a0;
+    else
+        return a1;
+}
+
+double plaw_statedecay(int n, double n0, double expn, double a0){
+    return a0 / (1 + pow(n/n0, expn));
 }
 
 
@@ -77,7 +99,7 @@ param parse_param_file(std::string file_path){
     dictd paramd;
     dictvecd paramvecd;
     dicts params;
-    
+
     std::ifstream param_file (file_path);
     if (!param_file.is_open())
         throw std::runtime_error("Error in opening the parameter file at "+file_path);
@@ -125,7 +147,7 @@ vec2d read_policy(std::string file_path) {
         vecd pol_at_state = str2vecd(line, " ", false);
         double cum_p=0;
         for (const double p : pol_at_state) cum_p+=p;
-        if (cum_p > 1+10E-6) 
+        if (cum_p > 1+10E-6)
             throw std::runtime_error("Not normalized policy at "+file_path+" "+std::to_string(cum_p));
         pol_at_state.push_back(1-cum_p);
         policy.push_back(pol_at_state);
@@ -150,6 +172,21 @@ vec2d read_quality(std::string file_path) {
 
     return quality;
 }
+
+/*vec2i read_occ(std::string file_path) {
+
+    vec2i occ(0);
+    std::ifstream occ_file (file_path);
+    if (!occ_file.is_open())
+        throw std::runtime_error("Error in opening the occ_matrix file at "+file_path);
+
+    std::string line;
+    while ( getline (occ_file, line) )
+        occ.push_back(int(str2vecd(line, ",", false)));
+    occ_file.close();
+
+    return occ;
+}*/
 
 
 vecd read_value(std::string file_path) {

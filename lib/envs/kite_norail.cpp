@@ -1,4 +1,4 @@
-#include "kite.h"
+#include "kite_norail.h"
 
 
 Kite::Kite(const param& params, std::mt19937& generator) : Environment{params, generator} {
@@ -38,10 +38,8 @@ env_info Kite::step(int action, bool eval) {
 	impose_action(action);
 	int t;
 	bool done = false;
-	//bool switch = false;
 	for (t=0; t<steps_btw_train; t++){
 		// Check the episode end or a terminal state reached
-
 		if (integrate_trajectory()) {
 			fallen_times++;
 			done = true;

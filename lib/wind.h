@@ -128,7 +128,7 @@ class Wind3d_turboframe : public Wind3d {
         constexpr static double y_size = 100.531;
         constexpr static double z_half_size = 50;
 
-        const static int n_frames = 1000;
+        const static int n_frames = 3000;
         const double delta_time = 0.2;
 
         double q_grid[n_grid_points][3];

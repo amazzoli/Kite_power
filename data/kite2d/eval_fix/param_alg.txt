@@ -1,6 +1,0 @@
-alg_type	eval
-ev_time	101
-n_steps	10100.0
-traj_points	1000
-policy_path	../data/kite2d/eval_fix//best_policy.txt
-gamma	1
