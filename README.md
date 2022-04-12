@@ -14,3 +14,7 @@ The two names define also the directory structure in *data*, where the parameter
 where the plots of the analysis are saved.
 
 g++ -o norail.exe run_norail.cpp ../lib/alg.cpp ../lib/qalg.cpp ../lib/eval.cpp ../lib/utils.cpp ../lib/wind.cpp ../lib/envs/kite_norail.cpp ../lib/envs/kite2d.cpp ../lib/envs/kite3d_norail.cpp -std=c++11
+
+To run the code:
+
+./norail.exe <system_name> <run_name>
